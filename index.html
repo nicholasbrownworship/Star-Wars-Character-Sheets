@@ -8,13 +8,14 @@
 <style>
 :root{
   --bg-overlay: rgba(2,6,12,0.55);
-  --panel: rgba(10,18,28,0.72);
+  --panel: rgba(10,18,28,0.85);
   --accent:#44d7ff;
   --muted:#98a0b3;
   --glass: rgba(255,255,255,0.03);
+  --highlight: rgba(68,215,255,0.2);
   font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
 }
-html,body{height:100%;margin:0}
+html,body{height:100%;margin:0;overflow:hidden}
 body{
   background: url('4107909.jpg') no-repeat center center fixed;
   background-size: cover;
@@ -23,48 +24,104 @@ body{
 }
 body::before{
   content:""; position:fixed; inset:0;
-  background:linear-gradient(180deg, rgba(0,0,0,0.45), rgba(0,0,0,0.65));
+  background:linear-gradient(180deg, rgba(0,0,0,0.45), rgba(0,0,0,0.7));
   z-index:-1;
 }
-.app{display:grid;grid-template-columns:320px 1fr;gap:18px;height:100vh;padding:20px;align-items:start}
-.panel{background:var(--panel);border-radius:12px;padding:14px;box-shadow:0 10px 40px rgba(3,10,18,0.75);border:1px solid rgba(68,215,255,0.08)}
-aside.panel{height:calc(100vh - 40px);overflow:auto}
-main.panel{height:calc(100vh - 40px);overflow:auto;position:relative}
-.datapad{background:linear-gradient(180deg, rgba(6,24,36,0.86), rgba(8,16,28,0.6));border:1px solid rgba(68,215,255,0.06);box-shadow:0 6px 30px rgba(0,120,160,0.12);border-radius:16px;padding:18px}
-header{display:flex;gap:12px;align-items:center}
-header .logo{width:52px;height:52px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#8a6b44);display:flex;align-items:center;justify-content:center;font-weight:700;font-family:'Orbitron',sans-serif;color:#021;box-shadow:0 6px 18px rgba(68,215,255,0.06)}
-h1{margin:0;font-size:16px}
+.app{display:grid;grid-template-columns:340px 1fr;gap:20px;height:100vh;padding:24px;align-items:start;animation:fadeIn 0.8s ease-out}
+.panel{
+  background:var(--panel);
+  border-radius:16px;
+  padding:18px;
+  box-shadow:0 12px 40px rgba(0,0,0,0.7);
+  border:1px solid rgba(68,215,255,0.1);
+  backdrop-filter: blur(4px);
+  transform:translateY(10px);
+  opacity:0;
+  animation:slideFadeIn 0.6s forwards;
+}
+aside.panel{height:calc(100vh - 48px);overflow:auto}
+main.panel{height:calc(100vh - 48px);overflow:auto;position:relative}
+
+header{display:flex;gap:12px;align-items:center;margin-bottom:12px}
+header .logo{
+  width:60px;height:60px;border-radius:12px;
+  background:linear-gradient(135deg,var(--accent),#8a6b44);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-family:'Orbitron',sans-serif;color:#021;
+  box-shadow:0 6px 18px rgba(68,215,255,0.1);
+  font-size:20px;
+}
+h1{margin:0;font-size:18px}
 .meta{font-size:12px;color:var(--muted)}
-.character-list{margin-top:12px}
-.char-item{display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));margin-bottom:8px;cursor:pointer}
-.char-item.active{outline:2px solid rgba(68,215,255,0.08)}
-.editor{display:flex;flex-direction:column;gap:12px}
-.row{display:flex;gap:12px}
+
+.character-list{margin-top:16px}
+.char-item{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:10px;border-radius:12px;
+  background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  margin-bottom:8px;cursor:pointer;
+  transition:all 0.2s;
+}
+.char-item:hover{background:var(--highlight);transform:translateX(3px);box-shadow:0 0 12px var(--accent);}
+.char-item.active{outline:2px solid var(--accent)}
+
+.editor{display:flex;flex-direction:column;gap:14px}
+.row{display:flex;gap:14px}
 .col{flex:1}
 label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px}
-input[type=text], input[type=number], select, textarea{width:100%;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:rgba(0,0,0,0.22);color:inherit}
+input[type=text], input[type=number], select, textarea{
+  width:100%;padding:8px;border-radius:8px;
+  border:1px solid rgba(255,255,255,0.06);
+  background:rgba(0,0,0,0.22);color:inherit;
+  transition:0.2s;
+}
+input[type=text]:focus,input[type=number]:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 6px var(--accent);}
 textarea{resize:vertical}
-.stat-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:8px}
-.stat{padding:8px;border-radius:8px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));text-align:center}
+
+.stat-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-top:10px}
+.stat{
+  padding:10px;border-radius:10px;
+  background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  text-align:center;
+  transition:all 0.3s;
+}
+.stat:hover{background:var(--highlight);transform:scale(1.03);box-shadow:0 0 8px var(--accent);}
 .stat input{width:56px;text-align:center;font-size:16px;background:transparent;border:0;color:inherit}
+
 .skills{display:flex;flex-direction:column;gap:6px;max-height:400px;overflow-y:auto}
-.skill{display:flex;justify-content:space-between;align-items:center;padding:6px;border-radius:8px;background:var(--glass)}
+.skill{display:flex;justify-content:space-between;align-items:center;padding:6px;border-radius:8px;background:var(--glass);transition:all 0.2s}
+.skill:hover{background:var(--highlight);transform:scale(1.02)}
 .skill .skillDice{display:flex;gap:4px}
 .dice-dot{width:16px;height:16px;border-radius:50%;display:inline-block;border:1px solid rgba(255,255,255,0.15);vertical-align:middle}
 .dice-dot.ability{background:green}
 .dice-dot.proficiency{background:yellow}
 .dice-dot.boost{background:blue}
 .dice-dot.force{background:white;border:1px solid #ccc}
-.dice-roller{margin-top:8px;padding:12px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:8px}
+
+.dice-roller{margin-top:12px;padding:14px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:12px;box-shadow:0 4px 20px rgba(0,120,160,0.1);}
 .dice-controls{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
 .dice-controls label{display:flex;flex-direction:column;align-items:center;font-size:12px}
-.dice-result{background:rgba(0,0,0,0.25);padding:10px;border-radius:8px;min-height:48px;display:flex;flex-wrap:wrap;gap:2px;align-items:center}
-.net-result{margin-top:6px;font-weight:600}
-.net-positive{color:#4caf50}
-.net-negative{color:#f44336}
-.net-neutral{color:#fff}
+
+.dice-result{background:rgba(0,0,0,0.25);padding:10px;border-radius:8px;min-height:48px;display:flex;flex-wrap:wrap;gap:2px;align-items:center;box-shadow:inset 0 0 6px rgba(68,215,255,0.1);}
+.dice-result img{opacity:0; animation:fadeInUp 0.4s forwards;}
+.net-result{margin-top:8px;font-weight:600;font-size:14px;transition:all 0.3s;transform:scale(1)}
+.net-positive{color:#4caf50; animation:netPop 0.4s forwards;}
+.net-negative{color:#f44336; animation:netPop 0.4s forwards;}
+.net-neutral{color:#fff; animation:netPop 0.4s forwards;}
+
 .actions{display:flex;gap:8px;flex-wrap:wrap}
-button{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:6px 10px;border-radius:8px;color:inherit;cursor:pointer}
+button{
+  background:transparent;border:1px solid rgba(255,255,255,0.08);
+  padding:6px 12px;border-radius:10px;color:inherit;
+  cursor:pointer;transition:all 0.2s;
+}
+button:hover{border-color:var(--accent);background:var(--highlight);}
+
+/* ====== ANIMATIONS ====== */
+@keyframes fadeIn{from{opacity:0} to{opacity:1}}
+@keyframes slideFadeIn{from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)}}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)}}
+@keyframes netPop{0%{transform:scale(0.8);opacity:0} 100%{transform:scale(1);opacity:1}}
 </style>
 </head>
 <body>
@@ -158,27 +215,15 @@ button{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:6p
 <button id="clearDiceBtn">Clear</button>
 </div>
 <div class="dice-result" id="diceResult"></div>
-<div class="net-result" id="netResult">Successes: 0 | Advantages: 0</div>
+<div class="net-result" id="netResult"></div>
 </div>
 </main>
 </div>
 
 <script>
 // ================== CHARACTER DATA ==================
-const ALL_SKILLS=[
-"Astrogation","Athletics","Brawl","Computers","Coordination","Cool","Deception","Discipline",
-"Leadership","Mechanics","Medicine","Negotiation","Perception","Piloting (Planetary)","Piloting (Space)",
-"Resilience","Skulduggery","Stealth","Streetwise","Survival","Vigilance","Lightsaber"
-];
-const skillAttributes = {
-"Brawn":["Athletics","Brawl","Resilience"],
-"Agility":["Piloting (Planetary)","Piloting (Space)","Coordination","Stealth"],
-"Intellect":["Computers","Mechanics","Medicine","Negotiation","Perception","Astrogation"],
-"Cunning":["Deception","Skulduggery","Streetwise","Survival"],
-"Willpower":["Discipline","Leadership","Vigilance"],
-"Presence":["Cool","Charm"]
-};
-
+const ALL_SKILLS=["Astrogation","Athletics","Brawl","Computers","Coordination","Cool","Deception","Discipline","Leadership","Mechanics","Medicine","Negotiation","Perception","Piloting (Planetary)","Piloting (Space)","Resilience","Skulduggery","Stealth","Streetwise","Survival","Vigilance","Lightsaber"];
+const skillAttributes={Brawn:["Athletics","Brawl","Resilience"],Agility:["Piloting (Planetary)","Piloting (Space)","Coordination","Stealth"],Intellect:["Computers","Mechanics","Medicine","Negotiation","Perception","Astrogation"],Cunning:["Deception","Skulduggery","Streetwise","Survival"],Willpower:["Discipline","Leadership","Vigilance"],Presence:["Cool","Charm"]};
 let characters=[],selectedIndex=null;
 
 // ================== DICE FACES ==================
@@ -192,114 +237,44 @@ setback:["black_blank.jpg","black_blank.jpg","black_failure.jpg","black_failure.
 force:["white_dark.jpg","white_dark.jpg","white_dark.jpg","white_dark.jpg","white_dark.jpg","white_dark.jpg","white_light.jpg","white_light.jpg","white_light_light.jpg","white_light_light.jpg","white_light_light.jpg","white_dark_dark.jpg"]
 };
 
+// ================== DICE ROLLER ==================
 function rollDieFace(type){return diceFaces[type][Math.floor(Math.random()*diceFaces[type].length)];}
 
-// ================== DICE ROLLER ==================
-function rollDice() {
-  const resultDiv = document.getElementById("diceResult");
-  const netDiv = document.getElementById("netResult");
-  resultDiv.innerHTML = "";
+function rollDice(){
+  const resultDiv=document.getElementById("diceResult");
+  const netDiv=document.getElementById("netResult");
+  resultDiv.innerHTML=""; netDiv.innerHTML="";
 
-  let netSuccess = 0;
-  let netAdv = 0;
-  let triumphs = 0;
-  let despairs = 0;
+  let totalSuccess=0, totalAdvantage=0, totalTriumph=0, totalDespair=0;
 
-  const types = ["ability", "proficiency", "boost", "difficulty", "challenge", "setback", "force"];
-
-  const diceValues = {
-    ability: {
-      "green_blank.jpg": {s:0,a:0,t:0,d:0},
-      "green_success.jpg": {s:1,a:0,t:0,d:0},
-      "green_success_success.jpg": {s:2,a:0,t:0,d:0},
-      "green_success_adv.jpg": {s:1,a:1,t:0,d:0},
-      "green_advantage.jpg": {s:0,a:1,t:0,d:0},
-      "green_advantage_advantage.jpg": {s:0,a:2,t:0,d:0},
-    },
-    proficiency: {
-      "yellow_blank.jpg": {s:0,a:0,t:0,d:0},
-      "yellow_success.jpg": {s:1,a:0,t:0,d:0},
-      "yellow_success_adv.jpg": {s:1,a:1,t:0,d:0},
-      "yellow_success_success.jpg": {s:2,a:0,t:0,d:0},
-      "yellow_success_success_adv.jpg": {s:2,a:1,t:0,d:0},
-      "yellow_advantage.jpg": {s:0,a:1,t:0,d:0},
-      "yellow_advantage_adv.jpg": {s:0,a:2,t:0,d:0},
-      "yellow_triumph.jpg": {s:1,a:0,t:1,d:0} // 1 success + 1 triumph
-    },
-    boost: {
-      "blue_blank.jpg": {s:0,a:0,t:0,d:0},
-      "blue_success.jpg": {s:1,a:0,t:0,d:0},
-      "blue_success_adv.jpg": {s:1,a:1,t:0,d:0},
-      "blue_advantage.jpg": {s:0,a:1,t:0,d:0},
-      "blue_advantage_advantage.jpg": {s:0,a:2,t:0,d:0},
-    },
-    difficulty: {
-      "purple_blank.jpg": {s:0,a:0,t:0,d:0},
-      "purple_failure.jpg": {s:-1,a:0,t:0,d:0},
-      "purple_failure_failure.jpg": {s:-2,a:0,t:0,d:0},
-      "purple_failure_threat.jpg": {s:-1,a:-1,t:0,d:0},
-      "purple_threat.jpg": {s:0,a:-1,t:0,d:0},
-      "purple_threat_threat.jpg": {s:0,a:-2,t:0,d:0},
-    },
-    challenge: {
-      "red_blank.jpg": {s:0,a:0,t:0,d:0},
-      "red_failure.jpg": {s:-1,a:0,t:0,d:0},
-      "red_failure_failure.jpg": {s:-2,a:0,t:0,d:0},
-      "red_failure_threat.jpg": {s:-1,a:-1,t:0,d:0},
-      "red_threat.jpg": {s:0,a:-1,t:0,d:0},
-      "red_threat_threat.jpg": {s:0,a:-2,t:0,d:0},
-      "red_despair.jpg": {s:-1,a:0,t:0,d:1} // 1 failure + 1 despair
-    },
-    setback: {
-      "black_blank.jpg": {s:0,a:0,t:0,d:0},
-      "black_failure.jpg": {s:-1,a:0,t:0,d:0},
-      "black_threat.jpg": {s:0,a:-1,t:0,d:0},
-    },
-    force: {
-      "white_dark.jpg": {s:-1,a:0,t:0,d:0},
-      "white_dark_dark.jpg": {s:-2,a:0,t:0,d:0},
-      "white_light.jpg": {s:1,a:0,t:0,d:0},
-      "white_light_light.jpg": {s:2,a:0,t:0,d:0},
-    }
-  };
-
-  types.forEach(type => {
-    const n = parseInt(document.getElementById("dice" + type.charAt(0).toUpperCase() + type.slice(1)).value) || 0;
-    for (let i = 0; i < n; i++) {
-      const face = rollDieFace(type);
-      const img = document.createElement("img");
-      img.src = "dice/" + face;
-      img.style.width = "36px";
-      img.style.height = "36px";
-      img.style.margin = "2px";
+  const types=["ability","proficiency","boost","difficulty","challenge","setback","force"];
+  types.forEach(type=>{
+    const n=parseInt(document.getElementById("dice"+type.charAt(0).toUpperCase()+type.slice(1)).value)||0;
+    for(let i=0;i<n;i++){
+      const face=rollDieFace(type);
+      const img=document.createElement("img");
+      img.src="dice/"+face; img.style.width="36px"; img.style.height="36px"; img.style.margin="2px";
       resultDiv.appendChild(img);
 
-      if (diceValues[type][face]) {
-        netSuccess += diceValues[type][face].s;
-        netAdv += diceValues[type][face].a;
-        triumphs += diceValues[type][face].t;
-        despairs += diceValues[type][face].d;
-      }
+      // Update totals
+      if(face.includes("success")) totalSuccess += face.includes("success_success") || face.includes("success_adv") ? 2 : 1;
+      if(face.includes("advantage")) totalAdvantage += face.includes("success_adv") || face.includes("advantage") ? 1 : 0;
+      if(face.includes("triumph")) { totalSuccess +=1; totalTriumph +=1; }
+      if(face.includes("failure")) totalSuccess -= face.includes("failure_failure") || face.includes("failure_threat") ? 2 : 1;
+      if(face.includes("threat")) totalAdvantage -= face.includes("failure_threat") || face.includes("threat") ? 1 : 0;
+      if(face.includes("despair")) { totalSuccess -=1; totalDespair +=1; }
     }
   });
 
-  let text = `Successes: ${netSuccess} | Advantages: ${netAdv}`;
-  if (triumphs > 0) text += ` | Triumphs: ${triumphs}`;
-  if (despairs > 0) text += ` | Despairs: ${despairs}`;
-
-  if (netSuccess > 0 || netAdv > 0 || triumphs > 0) {
-    netDiv.className = "net-result net-positive";
-  } else if (netSuccess < 0 || netAdv < 0 || despairs > 0) {
-    netDiv.className = "net-result net-negative";
-  } else {
-    netDiv.className = "net-result net-neutral";
-  }
-
-  netDiv.textContent = text;
+  // Display net result
+  let netText=`Successes: <span class="${totalSuccess>0?'net-positive':totalSuccess<0?'net-negative':'net-neutral'}">${totalSuccess}</span>, `;
+  netText+=`Advantages: <span class="${totalAdvantage>0?'net-positive':totalAdvantage<0?'net-negative':'net-neutral'}">${totalAdvantage}</span>, `;
+  netText+=`Triumphs: <span class="net-positive">${totalTriumph}</span>, Despairs: <span class="net-negative">${totalDespair}</span>`;
+  netDiv.innerHTML = netText;
 }
 
 document.getElementById("rollDiceBtn").onclick=rollDice;
-document.getElementById("clearDiceBtn").onclick=()=>{document.getElementById("diceResult").innerHTML=""; document.getElementById("netResult").textContent="Successes: 0 | Advantages: 0";};
+document.getElementById("clearDiceBtn").onclick=()=>{document.getElementById("diceResult").innerHTML=""; document.getElementById("netResult").innerHTML="";};
 
 // ================== CHARACTER FUNCTIONS ==================
 function saveToStorage(){localStorage.setItem("ffgChars",JSON.stringify(characters))}
