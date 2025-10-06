@@ -17,7 +17,7 @@
 }
 html,body{height:100%;margin:0}
 body{
-  background: url('4107909.jpg') no-repeat center center fixed;
+  background: url('BACKGROUND_IMAGE_URL') no-repeat center center fixed;
   background-size: cover;
   color:#e6eef8;
   min-height:100vh;
@@ -48,14 +48,16 @@ textarea{resize:vertical}
 .stat-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:8px}
 .stat{padding:8px;border-radius:8px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));text-align:center}
 .stat input{width:56px;text-align:center;font-size:16px;background:transparent;border:0;color:inherit}
-.skills, .gear-list{display:flex;flex-direction:column;gap:6px}
-.skill{display:flex;justify-content:space-between;align-items:center;padding:8px;border-radius:8px;background:var(--glass)}
+.skills{display:flex;flex-direction:column;gap:6px;max-height:400px;overflow-y:auto}
+.skill{display:flex;justify-content:space-between;align-items:center;padding:6px;border-radius:8px;background:var(--glass)}
+.skill input{width:40px;margin-left:8px}
+.skill .skillDice{min-width:32px;text-align:center}
 .dice-roller{margin-top:8px;padding:12px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:8px}
 .dice-controls{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 .dice-controls label{display:flex;flex-direction:column;align-items:center;font-size:12px}
-.dice-result{background:rgba(0,0,0,0.25);padding:10px;border-radius:8px;min-height:48px}
+.dice-result{background:rgba(0,0,0,0.25);padding:10px;border-radius:8px;min-height:48px;display:flex;flex-wrap:wrap;gap:2px;align-items:center}
 .actions{display:flex;gap:8px;flex-wrap:wrap}
-button{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px 10px;border-radius:8px;color:inherit;cursor:pointer}
+button{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:6px 10px;border-radius:8px;color:inherit;cursor:pointer}
 @media print{
   body::before{display:none}
   .app{padding:0}
@@ -76,6 +78,7 @@ button{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8p
 <body>
 
 <div class="app">
+  <!-- Sidebar -->
   <aside class="panel datapad">
     <header>
       <div class="logo">SW</div>
@@ -106,6 +109,7 @@ button{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8p
     </div>
   </aside>
 
+  <!-- Main editor -->
   <main class="panel datapad">
     <div style="display:flex;justify-content:space-between;align-items:center">
       <div>
@@ -157,37 +161,6 @@ button{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8p
       <div>
         <label>Skills</label>
         <div class="skills" id="skillList"></div>
-
-        <div style="display:flex;gap:8px;margin-top:8px">
-          <select id="skillPicker" style="flex:1">
-            <option value="">-- pick a skill --</option>
-            <option>Piloting (Space)</option>
-            <option>Piloting (Planetary)</option>
-            <option>Astrogation</option>
-            <option>Athletics</option>
-            <option>Charm</option>
-            <option>Coercion</option>
-            <option>Computers</option>
-            <option>Cool</option>
-            <option>Coordination</option>
-            <option>Deception</option>
-            <option>Discipline</option>
-            <option>Leadership</option>
-            <option>Mechanics</option>
-            <option>Medicine</option>
-            <option>Negotiation</option>
-            <option>Perception</option>
-            <option>Resilience</option>
-            <option>Skulduggery</option>
-            <option>Stealth</option>
-            <option>Streetwise</option>
-            <option>Surveillance</option>
-            <option>Underworld</option>
-            <option>Vigilance</option>
-          </select>
-          <input id="newSkillRank" type="number" value="0" min="0" style="width:80px" />
-          <button id="addSkillBtn">Add</button>
-        </div>
       </div>
 
       <div>
@@ -195,37 +168,32 @@ button{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8p
         <textarea id="gear" rows="3" placeholder="Blaster pistol, Vibroknife, Armor, Grenades..."></textarea>
       </div>
 
-      <div style="display:flex;gap:8px;align-items:center">
-        <button id="gainXpBtn">+5 XP</button>
-        <div class="meta">XP: <span id="xp">0</span></div>
-      </div>
-
-      <!-- Dice roller -->
       <div class="dice-roller">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div><strong>FFG Dice Roller</strong><div class="meta" style="font-size:11px">Ability / Proficiency / Difficulty / Challenge / Boost / Setback / Force</div></div>
-          <div style="display:flex;gap:8px">
-            <button id="clearDiceBtn">Clear</button>
-            <button id="rollDiceBtn">Roll</button>
-          </div>
-        </div>
+        <div class="meta">Dice Roller</div>
         <div class="dice-controls">
-          <label>Ability<input type="number" min="0" value="0" id="diceAbility"></label>
-          <label>Proficiency<input type="number" min="0" value="0" id="diceProficiency"></label>
-          <label>Difficulty<input type="number" min="0" value="0" id="diceDifficulty"></label>
-          <label>Challenge<input type="number" min="0" value="0" id="diceChallenge"></label>
-          <label>Boost<input type="number" min="0" value="0" id="diceBoost"></label>
-          <label>Setback<input type="number" min="0" value="0" id="diceSetback"></label>
-          <label>Force<input type="number" min="0" value="0" id="diceForce"></label>
+          <label>Ability <input type="number" id="diceAbility" value="0" min="0"></label>
+          <label>Proficiency <input type="number" id="diceProficiency" value="0" min="0"></label>
+          <label>Difficulty <input type="number" id="diceDifficulty" value="0" min="0"></label>
+          <label>Challenge <input type="number" id="diceChallenge" value="0" min="0"></label>
+          <label>Boost <input type="number" id="diceBoost" value="0" min="0"></label>
+          <label>Setback <input type="number" id="diceSetback" value="0" min="0"></label>
+          <label>Force <input type="number" id="diceForce" value="0" min="0"></label>
         </div>
         <div class="dice-result" id="diceResult"></div>
+        <div style="margin-top:6px">
+          <button id="rollDiceBtn">Roll Dice</button>
+          <button id="clearDiceBtn">Clear</button>
+        </div>
       </div>
     </div>
   </main>
 </div>
 
+<!-- Printable sheet -->
 <div class="print-sheet" id="printSheet">
-  <h2 id="printName">Character Sheet</h2>
+  <div class="sheet-header">
+    <h2 id="printName">Character Name</h2>
+  </div>
   <div class="sheet-grid">
     <div class="sheet-section" id="sheetStats"></div>
     <div class="sheet-section" id="sheetSkills"></div>
@@ -233,31 +201,29 @@ button{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8p
 </div>
 
 <script>
-// -------- Character Management --------
-let characters = JSON.parse(localStorage.getItem("ffgCharacters") || "[]");
-let selectedIndex = null;
-
-const charList = document.getElementById("charList");
-const editorForm = document.getElementById("editorForm");
+let characters=[], selectedIndex=null;
+const ALL_SKILLS = ["Astrogation","Brawl","Charm","Coercion","Computers","Cool","Coordination","Deception","Discipline","Gunnery","Knowledge (Core Worlds)","Knowledge (Education)","Knowledge (Lore)","Knowledge (Outer Rim)","Knowledge (Underworld)","Leadership","Mechanics","Medicine","Melee","Negotiation","Perception","Piloting (Planetary)","Piloting (Space)","Ranged (Light)","Ranged (Heavy)","Resilience","Skulduggery","Stealth","Streetwise","Survival","Vigilance","X"];
+// -------- Character management --------
+const charList=document.getElementById("charList");
+const editorForm=document.getElementById("editorForm");
 
 function refreshCharList(){
   charList.innerHTML="";
   characters.forEach((c,i)=>{
-    const li = document.createElement("div");
-    li.className="char-item"+(i===selectedIndex?" active":"");
-    li.textContent=c.name||"Unnamed Character";
-    li.onclick=()=>openCharacter(i);
-    charList.appendChild(li);
+    const div=document.createElement("div");
+    div.className="char-item"+(i===selectedIndex?" active":"");
+    div.textContent=c.name;
+    div.onclick=()=>openCharacter(i);
+    charList.appendChild(div);
   });
-  localStorage.setItem("ffgCharacters", JSON.stringify(characters));
 }
 
-function openCharacter(index){
-  selectedIndex=index;
-  const c = characters[index];
-  document.getElementById("charNameDisplay").textContent=c.name||"Unnamed Character";
-  editorForm.style.display="flex";
-  document.getElementById("name").value=c.name;
+function openCharacter(idx){
+  selectedIndex=idx;
+  const c=characters[idx];
+  editorForm.style.display="block";
+  document.getElementById("charNameDisplay").textContent=c.name;
+  document.getElementById("name").value=c.name||"";
   document.getElementById("species").value=c.species||"";
   document.getElementById("career").value=c.career||"";
   document.getElementById("notes").value=c.notes||"";
@@ -266,9 +232,8 @@ function openCharacter(index){
   document.getElementById("soak").value=c.soak||0;
   document.getElementById("defense").value=c.defense||0;
   document.getElementById("xp").textContent=c.xp||0;
-
-  renderStats(c.stats||{});
-  renderSkills(c.skills||{});
+  renderStats(c.stats);
+  renderSkills(c.skills);
   document.getElementById("gear").value=c.gear||"";
   refreshCharList();
 }
@@ -364,34 +329,32 @@ function readStats(){
 function renderSkills(skills){
   const skillList=document.getElementById("skillList");
   skillList.innerHTML="";
-  Object.keys(skills).forEach(k=>{
-    const div=document.createElement("div"); div.className="skill";
-    div.textContent=`${k} : ${skills[k]}`;
-    div.onclick=()=>{delete skills[k]; renderSkills(skills);}
+  ALL_SKILLS.forEach(skill=>{
+    const div=document.createElement("div");
+    div.className="skill";
+    const rank = skills[skill] || 0;
+    div.innerHTML = `
+      <span>${skill}</span>
+      <input type="number" min="0" value="${rank}" data-skill="${skill}" style="width:40px;margin-left:8px">
+      <span class="skillDice" style="margin-left:8px;">🎲0</span>
+    `;
+    div.querySelector("input").oninput = (e)=>{
+      skills[skill]=parseInt(e.target.value)||0;
+      renderSkills(skills);
+    }
     skillList.appendChild(div);
   });
 }
 function readSkills(){
   const skills={};
-  document.querySelectorAll("#skillList .skill").forEach(s=>{
-    const parts=s.textContent.split(":");
-    if(parts.length===2) skills[parts[0].trim()]=parseInt(parts[1].trim())||0;
+  document.querySelectorAll("#skillList input").forEach(i=>{
+    skills[i.dataset.skill]=parseInt(i.value)||0;
   });
   return skills;
 }
-document.getElementById("addSkillBtn").onclick=()=>{
-  if(selectedIndex===null) return;
-  const sk=document.getElementById("skillPicker").value;
-  const rank=parseInt(document.getElementById("newSkillRank").value)||0;
-  if(!sk) return;
-  const c=characters[selectedIndex];
-  c.skills[c.skills||{}]=c.skills||{};
-  c.skills[sk]=rank;
-  renderSkills(c.skills);
-};
 
 // XP buttons
-document.getElementById("gainXpBtn").onclick=()=>{
+document.getElementById("gainXpBtn")?.onclick=()=>{
   if(selectedIndex===null) return;
   const c=characters[selectedIndex]; c.xp=(c.xp||0)+5;
   document.getElementById("xp").textContent=c.xp;
@@ -406,8 +369,66 @@ document.getElementById("downloadBtn").onclick=()=>{
   const a=document.createElement("a"); a.href=url; a.download=characters[selectedIndex].name+"_sheet.json"; a.click();
 };
 
-// -------- Dice Roller --------
-function rollDie(sidesArray){return sidesArray[Math.floor(Math.random()*sidesArray.length)];}
+// -------- Dice Roller with icons --------
+const diceFaces = {
+  ability: [
+    "green_blank.jpg",
+    "green_succes.jpg","green_succes.jpg",
+    "green_success_success.jpg",
+    "green_success_adv.jpg",
+    "green_advantage.jpg","green_advantage.jpg",
+    "green_advantage_advantage.jpg"
+  ],
+  proficiency: [
+    "yellow_advantage.jpg",
+    "yellow_advantage_adv.jpg","yellow_advantage_adv.jpg",
+    "yellow_blank.jpg",
+    "yellow_success.jpg","yellow_success.jpg",
+    "yellow_success_adv.jpg","yellow_success_adv.jpg","yellow_success_adv.jpg",
+    "yellow_success_success.jpg","yellow_success_success.jpg",
+    "yellow_triumph.jpg"
+  ],
+  difficulty: [
+    "purple_blank.jpg",
+    "purple_failure.jpg",
+    "purple_failure_failure.jpg",
+    "purple_failure_threat.jpg",
+    "purple_threat.jpg","purple_threat.jpg","purple_threat.jpg",
+    "purple_threat_threat.jpg"
+  ],
+  challenge: [
+    "red_blank.jpg",
+    "red_despair.jpg",
+    "red_failure.jpg","red_failure.jpg",
+    "red_failure_failure.jpg","red_failure_failure.jpg",
+    "red_failure_threat.jpg","red_failure_threat.jpg",
+    "red_threat.jpg","red_threat.jpg",
+    "red_threat_threat.jpg","red_threat_threat.jpg"
+  ],
+  boost: [
+    "blue_blank.jpg","blue_blank.jpg",
+    "blue_advantage.jpg",
+    "blue_advantage_adv.jpg",
+    "blue_success.jpg",
+    "blue_success_adv.jpg"
+  ],
+  setback: [
+    "black_blank.jpg","black_blank.jpg",
+    "black_failure.jpg","black_failure.jpg",
+    "black_threat.jpg","black_threat.jpg"
+  ],
+  force: [
+    "white_dark.jpg","white_dark.jpg","white_dark.jpg","white_dark.jpg","white_dark.jpg","white_dark.jpg",
+    "white_light.jpg","white_light.jpg",
+    "white_light_light.jpg","white_light_light.jpg","white_light_light.jpg",
+    "white_dark_dark.jpg"
+  ]
+};
+
+function rollDieFace(type){ 
+  const arr = diceFaces[type]; 
+  return arr[Math.floor(Math.random()*arr.length)]; 
+}
 
 document.getElementById("rollDiceBtn").onclick=()=>{
   const ability=parseInt(document.getElementById("diceAbility").value)||0;
@@ -417,16 +438,28 @@ document.getElementById("rollDiceBtn").onclick=()=>{
   const boost=parseInt(document.getElementById("diceBoost").value)||0;
   const setback=parseInt(document.getElementById("diceSetback").value)||0;
   const force=parseInt(document.getElementById("diceForce").value)||0;
-  // Dice faces simplified for demonstration
-  const faces={ability:["Success","Success","Advantage","Advantage","Success+Adv","Blank","Advantage","Success"], proficiency:["Success","Success","Success+Adv","Advantage","Advantage","Triumph","Success","Blank"],difficulty:["Failure","Failure","Threat","Threat","Failure+Threat","Blank","Threat","Threat"], challenge:["Failure","Failure","Failure+Threat","Threat","Threat","Despair","Blank","Threat"], boost:["Success","Advantage","Blank","Advantage"], setback:["Failure","Threat","Blank","Threat"], force:["Dark","Dark","Dark","Dark","Light","Light","Light","Light"]};
-  let results=[];
-  function addDie(n,type){for(let i=0;i<n;i++)results.push(rollDie(faces[type]));}
-  addDie(ability,"ability"); addDie(proficiency,"proficiency");
-  addDie(difficulty,"difficulty"); addDie(challenge,"challenge");
-  addDie(boost,"boost"); addDie(setback,"setback"); addDie(force,"force");
-  document.getElementById("diceResult").textContent=results.join(" | ");
+
+  const resultContainer=document.getElementById("diceResult");
+  resultContainer.innerHTML=""; 
+
+  function addDice(n,type){
+    for(let i=0;i<n;i++){
+      const img = document.createElement("img");
+      img.src="dice/"+rollDieFace(type);
+      img.style.width="36px"; img.style.height="36px"; img.style.margin="2px";
+      resultContainer.appendChild(img);
+    }
+  }
+
+  addDice(ability,"ability");
+  addDice(proficiency,"proficiency");
+  addDice(difficulty,"difficulty");
+  addDice(challenge,"challenge");
+  addDice(boost,"boost");
+  addDice(setback,"setback");
+  addDice(force,"force");
 };
-document.getElementById("clearDiceBtn").onclick=()=>document.getElementById("diceResult").textContent="";
+document.getElementById("clearDiceBtn").onclick=()=>document.getElementById("diceResult").innerHTML="";
 
 // -------- Print Sheet --------
 function printSheet(){
