@@ -58,6 +58,9 @@ textarea{resize:vertical}
 .result-summary{margin-top:10px;font-size:14px;padding:8px;background:rgba(0,0,0,0.35);border-radius:8px}
 .actions{display:flex;gap:8px;flex-wrap:wrap}
 button{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:6px 10px;border-radius:8px;color:inherit;cursor:pointer}
+.dot {display:inline-block;width:16px;height:16px;border-radius:50%;margin-right:2px;}
+.dot.green {background:#4caf50;}
+.dot.yellow {background:#ffeb3b;border:1px solid #aaa;}
 </style>
 </head>
 <body>
@@ -78,7 +81,7 @@ button{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:6p
       <button id="importBtn">Import</button>
       <input id="importFile" type="file" accept="application/json" style="display:none" />
     </div>
-    <div class="character-list" id="charList" aria-label="Characters"></div>
+    <div class="character-list" id="charList"></div>
     <div style="margin-top:12px;border-top:1px solid rgba(255,255,255,0.03);padding-top:12px">
       <div class="meta">Quick actions</div>
       <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
@@ -127,22 +130,10 @@ button{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:6p
       </div>
 
       <div style="display:flex;gap:12px">
-        <div style="flex:1">
-          <label>Wounds</label>
-          <input id="wounds" type="number" min="0" />
-        </div>
-        <div style="flex:1">
-          <label>Strain</label>
-          <input id="strain" type="number" min="0" />
-        </div>
-        <div style="flex:1">
-          <label>Soak</label>
-          <input id="soak" type="number" min="0" />
-        </div>
-        <div style="flex:1">
-          <label>Defense</label>
-          <input id="defense" type="number" min="0" />
-        </div>
+        <div style="flex:1"><label>Wounds</label><input id="wounds" type="number" min="0" /></div>
+        <div style="flex:1"><label>Strain</label><input id="strain" type="number" min="0" /></div>
+        <div style="flex:1"><label>Soak</label><input id="soak" type="number" min="0" /></div>
+        <div style="flex:1"><label>Defense</label><input id="defense" type="number" min="0" /></div>
       </div>
 
       <div>
@@ -186,7 +177,7 @@ const ALL_SKILLS=Object.keys(SKILL_TO_STAT);
 
 let characters=[],selectedIndex=null;
 
-// --- Dice Faces ---
+// --- Dice Faces (now .jpg) ---
 const diceFaces={
   ability:["green_blank.jpg","green_success.jpg","green_success_success.jpg","green_success_adv.jpg","green_advantage.jpg","green_advantage_advantage.jpg"],
   proficiency:["yellow_blank.jpg","yellow_success.jpg","yellow_success_adv.jpg","yellow_success_adv.jpg","yellow_success_success.jpg","yellow_success_success.jpg","yellow_advantage.jpg","yellow_advantage_adv.jpg","yellow_triumph.jpg"],
@@ -276,16 +267,17 @@ function renderSkills(skills,stats){
     if(!skills[skill]) skills[skill]={rank:0};
     const rank = skills[skill].rank||0;
     const statVal=stats?.[SKILL_TO_STAT[skill]]||0;
-    const diceDiv=document.createElement("div");
-    diceDiv.className="skillDice";
 
     const base=Math.max(rank,statVal);
     const upgrades=Math.min(rank,statVal);
     const yellows=upgrades;
     const greens=base-upgrades;
 
-    for(let i=0;i<greens;i++){diceDiv.innerHTML+=`<img src="dice/green_success.png" width="20">`;}
-    for(let i=0;i<yellows;i++){diceDiv.innerHTML+=`<img src="dice/yellow_success.png" width="20">`;}
+    const diceDiv=document.createElement("div");
+    diceDiv.className="skillDice";
+
+    for(let i=0;i<greens;i++){diceDiv.innerHTML+=`<span class="dot green"></span>`;}
+    for(let i=0;i<yellows;i++){diceDiv.innerHTML+=`<span class="dot yellow"></span>`;}
 
     const div=document.createElement("div");
     div.className="skill";
@@ -312,65 +304,59 @@ function readSkills(){
 }
 
 // --- Dice Roller ---
+function rollDie(faces){return faces[Math.floor(Math.random()*faces.length)]}
 function rollDice(){
   const resultDiv=document.getElementById("diceResult");
-  const summaryDiv=document.getElementById("resultSummary");
-  resultDiv.innerHTML=""; summaryDiv.innerHTML="";
-  let totals={success:0,advantage:0,failure:0,threat:0,triumph:0,despair:0,light:0,dark:0};
+  resultDiv.innerHTML="";
+  let tally={success:0,advantage:0,triumph:0,despair:0,threat:0,failure:0,light:0,dark:0};
 
-  function processFace(type,face){
-    const img=document.createElement("img");
-    img.src="dice/"+face;
-    img.width=32;
-    resultDiv.appendChild(img);
-    if(face.includes("success")) totals.success+=(face.match(/success/g)||[]).length;
-    if(face.includes("failure")) totals.failure+=(face.match(/failure/g)||[]).length;
-    if(face.includes("adv")) totals.advantage+=(face.match(/adv/g)||[]).length;
-    if(face.includes("threat")) totals.threat+=(face.match(/threat/g)||[]).length;
-    if(face.includes("triumph")) totals.triumph++, totals.success++;
-    if(face.includes("despair")) totals.despair++, totals.failure++;
-    if(face.includes("light")) totals.light+=(face.match(/light/g)||[]).length;
-    if(face.includes("dark")) totals.dark+=(face.match(/dark/g)||[]).length;
+  function addDice(type,count){
+    for(let i=0;i<count;i++){
+      const face=rollDie(diceFaces[type]);
+      const img=document.createElement("img");
+      img.src=face; img.style.height="38px";
+      resultDiv.appendChild(img);
+
+      if(face.includes("success")) tally.success++;
+      if(face.includes("failure")) tally.failure++;
+      if(face.includes("adv")) tally.advantage++;
+      if(face.includes("threat")) tally.threat++;
+      if(face.includes("triumph")) tally.triumph++;
+      if(face.includes("despair")) tally.despair++;
+      if(face.includes("light")) tally.light++;
+      if(face.includes("dark")) tally.dark++;
+    }
   }
 
-  ["ability","proficiency","boost","difficulty","challenge","setback","force"].forEach(type=>{
-    const count=parseInt(document.getElementById("dice"+type.charAt(0).toUpperCase()+type.slice(1)).value)||0;
-    for(let i=0;i<count;i++){
-      const face=diceFaces[type][Math.floor(Math.random()*diceFaces[type].length)];
-      processFace(type,face);
-    }
-  });
+  addDice("ability",parseInt(document.getElementById("diceAbility").value)||0);
+  addDice("proficiency",parseInt(document.getElementById("diceProficiency").value)||0);
+  addDice("boost",parseInt(document.getElementById("diceBoost").value)||0);
+  addDice("difficulty",parseInt(document.getElementById("diceDifficulty").value)||0);
+  addDice("challenge",parseInt(document.getElementById("diceChallenge").value)||0);
+  addDice("setback",parseInt(document.getElementById("diceSetback").value)||0);
+  addDice("force",parseInt(document.getElementById("diceForce").value)||0);
 
-  summaryDiv.innerHTML=`
-    <b>Results:</b><br>
-    Success: ${totals.success} | Failure: ${totals.failure}<br>
-    Advantage: ${totals.advantage} | Threat: ${totals.threat}<br>
-    Triumph: ${totals.triumph} | Despair: ${totals.despair}<br>
-    Light: ${totals.light} | Dark: ${totals.dark}
-  `;
+  document.getElementById("resultSummary").textContent=
+    `Net Success: ${tally.success-tally.failure}, Net Advantage: ${tally.advantage-tally.threat}, Triumphs: ${tally.triumph}, Despairs: ${tally.despair}, Light: ${tally.light}, Dark: ${tally.dark}`;
 }
 document.getElementById("rollDiceBtn").onclick=rollDice;
-document.getElementById("clearDiceBtn").onclick=()=>{document.getElementById("diceResult").innerHTML="";document.getElementById("resultSummary").innerHTML=""};
+document.getElementById("clearDiceBtn").onclick=()=>{document.getElementById("diceResult").innerHTML="";document.getElementById("resultSummary").textContent=""};
 
-// --- Init ---
-document.getElementById("newBtn").onclick=()=>{
-  characters.push({name:"New Character",stats:{},skills:{}});
-  selectedIndex=characters.length-1;
-  saveToStorage(); openCharacter(selectedIndex);
-}
+// --- Buttons ---
+document.getElementById("newBtn").onclick=()=>{characters.push({name:"New Character",species:"",career:"",notes:"",wounds:0,strain:0,soak:0,defense:0,gear:"",stats:{},skills:{}});selectedIndex=characters.length-1;openCharacter(selectedIndex);saveToStorage();}
+document.getElementById("deleteBtn").onclick=()=>{if(selectedIndex!==null){characters.splice(selectedIndex,1);selectedIndex=null;document.getElementById("editorForm").style.display="none";refreshCharList();saveToStorage();}};
+document.getElementById("duplicateBtn").onclick=()=>{if(selectedIndex!==null){const c=JSON.parse(JSON.stringify(characters[selectedIndex]));c.name+=" Copy";characters.push(c);refreshCharList();saveToStorage();}}
 document.getElementById("saveBtn").onclick=saveCharacter;
-document.getElementById("duplicateBtn").onclick=()=>{
-  if(selectedIndex!==null){characters.push(JSON.parse(JSON.stringify(characters[selectedIndex])));saveToStorage();refreshCharList();}
-}
-document.getElementById("deleteBtn").onclick=()=>{if(selectedIndex!==null){characters.splice(selectedIndex,1);selectedIndex=null;saveToStorage();refreshCharList();document.getElementById("editorForm").style.display="none"}}
-document.getElementById("exportBtn").onclick=()=>{const blob=new Blob([JSON.stringify(characters)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="characters.json";a.click();}
+document.getElementById("clearAllBtn").onclick=()=>{if(confirm("Clear all characters?")){characters=[];selectedIndex=null;saveToStorage();refreshCharList();document.getElementById("editorForm").style.display="none";}}
+document.getElementById("exportBtn").onclick=()=>{const data=JSON.stringify(characters);const blob=new Blob([data],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="characters.json";a.click();}
 document.getElementById("importBtn").onclick=()=>document.getElementById("importFile").click();
-document.getElementById("importFile").onchange=(e)=>{const file=e.target.files[0];if(file){const r=new FileReader();r.onload=()=>{characters=JSON.parse(r.result);saveToStorage();refreshCharList()};r.readAsText(file);}}
-document.getElementById("seedBtn").onclick=()=>{characters.push({name:"Luke Skywalker",species:"Human",career:"Jedi Knight",notes:"May the Force be with you.",stats:{Brawn:3,Agility:3,Intellect:2,Cunning:2,Willpower:3,Presence:4},skills:{"Lightsaber":{rank:3},"Athletics":{rank:2},"Cool":{rank:2}}});saveToStorage();refreshCharList();}
-document.getElementById("clearAllBtn").onclick=()=>{characters=[];selectedIndex=null;saveToStorage();refreshCharList();document.getElementById("editorForm").style.display="none";}
+document.getElementById("importFile").onchange=(e)=>{const file=e.target.files[0];if(file){const reader=new FileReader();reader.onload=(ev)=>{characters=JSON.parse(ev.target.result);refreshCharList();saveToStorage();};reader.readAsText(file);}};
+document.getElementById("seedBtn").onclick=()=>{characters.push({name:"Luke Skywalker",species:"Human",career:"Jedi",notes:"Farmboy turned Jedi.",wounds:12,strain:12,soak:4,defense:1,gear:"Lightsaber, Robes",stats:{Brawn:3,Agility:3,Intellect:2,Cunning:2,Willpower:3,Presence:4},skills:{"Lightsaber":{rank:2},"Cool":{rank:2},"Athletics":{rank:1},"Perception":{rank:1},"Leadership":{rank:2}}});selectedIndex=characters.length-1;openCharacter(selectedIndex);saveToStorage();}
 document.getElementById("printBtn").onclick=()=>window.print();
 
-loadFromStorage();refreshCharList();
+// Init
+loadFromStorage();
+refreshCharList();
 </script>
 </body>
 </html>
