@@ -314,5 +314,87 @@
     });
 
   </script>
+  <div id="dice-roller">
+  <h2>FFG Dice Roller</h2>
+  <label>Ability (green): <input type="number" id="abilityDice" value="0" min="0"></label>
+  <label>Proficiency (yellow): <input type="number" id="proficiencyDice" value="0" min="0"></label>
+  <label>Difficulty (purple): <input type="number" id="difficultyDice" value="0" min="0"></label>
+  <label>Challenge (red): <input type="number" id="challengeDice" value="0" min="0"></label>
+  <label>Boost (blue): <input type="number" id="boostDice" value="0" min="0"></label>
+  <label>Setback (black): <input type="number" id="setbackDice" value="0" min="0"></label>
+  <label>Force (white): <input type="number" id="forceDice" value="0" min="0"></label>
+  <button onclick="rollFFGDice()">Roll Dice</button>
+  <pre id="diceResults"></pre>
+</div>
+
+<script>
+// Dice symbol pools for FFG system
+const DICE = {
+  ability: [["S"],["S"],["A"],["A"],["S","A"],["S"],["A"],[]],
+  proficiency: [["S"],["S"],["S","S"],["A"],["A"],["A","A"],["S","A"],["S","A"],["T"],["S"],["A"],[]],
+  difficulty: [["F"],["F"],["T"],["T"],["F","T"],["F"],["T"],[]],
+  challenge: [["F"],["F"],["F","F"],["T"],["T"],["T","T"],["F","T"],["F","T"],["D"],["F"],["T"],[]],
+  boost: [["S"],["A"],["S","A"],["A","A"],[],[]],
+  setback: [["F"],["F"],["T"],["T"],[],[]],
+  force: [["L"],["L"],["L"],["L"],["L","L"],["D"],["D"],["D"],["D"],["D"],["D","D"],[]]
+};
+
+// Helper to roll one die
+function rollDie(type) {
+  const sides = DICE[type];
+  const result = sides[Math.floor(Math.random() * sides.length)];
+  return result;
+}
+
+// Roll multiple dice
+function rollFFGDice() {
+  const counts = {
+    ability: +document.getElementById("abilityDice").value,
+    proficiency: +document.getElementById("proficiencyDice").value,
+    difficulty: +document.getElementById("difficultyDice").value,
+    challenge: +document.getElementById("challengeDice").value,
+    boost: +document.getElementById("boostDice").value,
+    setback: +document.getElementById("setbackDice").value,
+    force: +document.getElementById("forceDice").value
+  };
+
+  const tally = {S:0,F:0,A:0,T:0,Tm:0,Dp:0,L:0,D:0}; // Triumph, Despair, Light, Dark
+  let details = [];
+
+  for (let type in counts) {
+    for (let i=0;i<counts[type];i++) {
+      const result = rollDie(type);
+      details.push(type + ": " + (result.length ? result.join(",") : "blank"));
+      for (let sym of result) {
+        if (sym==="T") tally.T++;
+        else if (sym==="S") tally.S++;
+        else if (sym==="F") tally.F++;
+        else if (sym==="A") tally.A++;
+        else if (sym==="D") tally.D++;
+        else if (sym==="L") tally.L++;
+        else if (sym==="Tm") tally.Tm++;
+        else if (sym==="Dp") tally.Dp++;
+        else if (sym==="T") tally.T++;
+        else if (sym==="D") tally.D++;
+        else if (sym==="T") tally.T++;
+        else if (sym==="D") tally.D++;
+      }
+    }
+  }
+
+  // Net results
+  const netSuccess = tally.S - tally.F;
+  const netAdvantage = tally.A - tally.T;
+
+  let output = "Rolls:\n" + details.join("\n") + "\n\n";
+  output += `Net Results: ${netSuccess} Success, ${netAdvantage} Advantage\n`;
+  if (tally.Tm) output += `Triumph: ${tally.Tm}\n`;
+  if (tally.Dp) output += `Despair: ${tally.Dp}\n`;
+  if (tally.L || tally.D) output += `Force: ${tally.L} Light / ${tally.D} Dark\n`;
+
+  document.getElementById("diceResults").textContent = output;
+}
+</script>
+
 </body>
 </html>
