@@ -1,0 +1,600 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>FFG Star Wars — Character Tracker (with Dice + Print)</title>
+
+<!-- Font -->
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg-overlay: rgba(2,6,12,0.55);
+    --panel: rgba(10,18,28,0.72);
+    --accent:#44d7ff;
+    --muted:#98a0b3;
+    --glass: rgba(255,255,255,0.03);
+    --datapad:#061824;
+    font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  }
+  html,body{height:100%;margin:0}
+  body{
+    background: url('BACKGROUND_IMAGE_URL') no-repeat center center fixed;
+    background-size: cover;
+    color:#e6eef8;
+    min-height:100vh;
+  }
+  /* overlay for readability */
+  body::before{
+    content:""; position:fixed; inset:0;
+    background:linear-gradient(180deg, rgba(0,0,0,0.45), rgba(0,0,0,0.65));
+    z-index:-1;
+  }
+
+  /* Layout */
+  .app{display:grid;grid-template-columns:320px 1fr;gap:18px;height:100vh;padding:20px;align-items:start}
+  .panel{background:var(--panel);border-radius:12px;padding:14px;box-shadow:0 10px 40px rgba(3,10,18,0.75);border:1px solid rgba(68,215,255,0.08)}
+  aside.panel{height:calc(100vh - 40px);overflow:auto}
+  main.panel{height:calc(100vh - 40px);overflow:auto;position:relative}
+
+  /* Datapad look */
+  .datapad{background:linear-gradient(180deg, rgba(6,24,36,0.86), rgba(8,16,28,0.6));border:1px solid rgba(68,215,255,0.06);box-shadow:0 6px 30px rgba(0,120,160,0.12);border-radius:16px;padding:18px}
+  header{display:flex;gap:12px;align-items:center}
+  header .logo{width:52px;height:52px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#8a6b44);display:flex;align-items:center;justify-content:center;font-weight:700;font-family:'Orbitron',sans-serif;color:#021;box-shadow:0 6px 18px rgba(68,215,255,0.06)}
+  h1{margin:0;font-size:16px}
+  .meta{font-size:12px;color:var(--muted)}
+
+  /* list */
+  .character-list{margin-top:12px}
+  .char-item{display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));margin-bottom:8px;cursor:pointer}
+  .char-item.active{outline:2px solid rgba(68,215,255,0.08)}
+
+  /* editor */
+  .editor{display:flex;flex-direction:column;gap:12px}
+  .row{display:flex;gap:12px}
+  .col{flex:1}
+  label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px}
+  input[type=text], input[type=number], select, textarea{width:100%;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:rgba(0,0,0,0.22);color:inherit}
+  textarea{resize:vertical}
+
+  .stat-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:8px}
+  .stat{padding:8px;border-radius:8px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));text-align:center}
+  .stat input{width:56px;text-align:center;font-size:16px;background:transparent;border:0;color:inherit}
+
+  .skills, .gear-list{display:flex;flex-direction:column;gap:6px}
+  .skill{display:flex;justify-content:space-between;align-items:center;padding:8px;border-radius:8px;background:var(--glass)}
+
+  /* dice roller */
+  .dice-roller{margin-top:8px;padding:12px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:8px}
+  .dice-controls{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+  .dice-controls label{display:flex;flex-direction:column;align-items:center;font-size:12px}
+  .dice-result{background:rgba(0,0,0,0.25);padding:10px;border-radius:8px;min-height:48px}
+
+  .actions{display:flex;gap:8px;flex-wrap:wrap}
+  button{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px 10px;border-radius:8px;color:inherit;cursor:pointer}
+
+  /* print view */
+  @media print{
+    body::before{display:none}
+    .app{padding:0}
+    aside.panel, .controls, .character-list, .footer-actions, .import-input, button{display:none !important}
+    main.panel{box-shadow:none;border:0;background:transparent;padding:0;height:auto}
+    .print-sheet{display:block}
+  }
+
+  /* small */
+  @media (max-width:900px){
+    .app{grid-template-columns:1fr;grid-auto-rows:auto;padding:12px}
+    aside.panel{height:auto}
+  }
+
+  /* printable sheet (hidden in UI, shown for print preview) */
+  .print-sheet{display:none;background:linear-gradient(180deg,#041423,#03121a);color:#e6eef8;padding:20px;border-radius:6px}
+  .sheet-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .sheet-header{display:flex;justify-content:space-between;align-items:center}
+  .sheet-section{background:rgba(255,255,255,0.03);padding:8px;border-radius:6px}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- LEFT: sidebar -->
+  <aside class="panel datapad">
+    <header>
+      <div class="logo">SW</div>
+      <div>
+        <h1>FFG Character Tracker</h1>
+        <div class="meta">Local-only · export/import JSON · printable</div>
+      </div>
+    </header>
+
+    <div class="controls" style="margin-top:12px">
+      <button id="newBtn">New</button>
+      <button id="duplicateBtn">Duplicate</button>
+      <button id="deleteBtn">Delete</button>
+      <button id="exportBtn">Export</button>
+      <button id="importBtn">Import</button>
+      <input id="importFile" type="file" accept="application/json" style="display:none" />
+    </div>
+
+    <div class="character-list" id="charList" aria-label="Characters"></div>
+
+    <div style="margin-top:12px;border-top:1px solid rgba(255,255,255,0.03);padding-top:12px">
+      <div class="meta">Quick actions</div>
+      <div style="margin-top:8px;display:flex;gap:8px">
+        <button id="seedBtn">Load Sample</button>
+        <button id="clearAllBtn">Clear All</button>
+        <button id="printBtn">Print Sheet</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- RIGHT: editor -->
+  <main class="panel datapad">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div class="meta">Editing</div>
+        <div id="charNameDisplay" style="font-size:20px">— select a character —</div>
+      </div>
+      <div class="actions">
+        <button id="saveBtn">Save</button>
+        <button id="downloadBtn">Download JSON</button>
+      </div>
+    </div>
+
+    <div id="editorForm" style="display:none" class="editor">
+      <div class="row">
+        <div class="col">
+          <label>Name</label>
+          <input id="name" type="text" placeholder="Character name" />
+        </div>
+        <div style="width:190px">
+          <label>Species</label>
+          <input id="species" type="text" placeholder="Human / Twi'lek" />
+        </div>
+        <div style="width:220px">
+          <label>Career / Role</label>
+          <input id="career" type="text" placeholder="Smuggler / Bounty Hunter" />
+        </div>
+      </div>
+
+      <div>
+        <label>Motivation / Notes</label>
+        <textarea id="notes" rows="3"></textarea>
+      </div>
+
+      <div>
+        <label>Characteristics</label>
+        <div class="stat-grid" id="stats"></div>
+      </div>
+
+      <div style="display:flex;gap:12px">
+        <div style="flex:1">
+          <label>Wounds</label>
+          <input id="wounds" type="number" min="0" />
+        </div>
+        <div style="width:140px"><label>Strain</label><input id="strain" type="number" min="0" /></div>
+        <div style="width:140px"><label>Soak</label><input id="soak" type="number" min="0" /></div>
+        <div style="width:140px"><label>Defense</label><input id="defense" type="number" min="0" /></div>
+      </div>
+
+      <div>
+        <label>Skills</label>
+        <div class="skills" id="skillList"></div>
+
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <select id="skillPicker" style="flex:1">
+            <!-- Common FFG Core Rulebook skills: -->
+            <option value="">-- pick a skill --</option>
+            <option>Piloting (Space)</option>
+            <option>Piloting (Planetary)</option>
+            <option>Astrogation</option>
+            <option>Athletics</option>
+            <option>Charm</option>
+            <option>Coercion</option>
+            <option>Computers</option>
+            <option>Cool</option>
+            <option>Coordination</option>
+            <option>Deception</option>
+            <option>Discipline</option>
+            <option>Leadership</option>
+            <option>Mechanics</option>
+            <option>Medicine</option>
+            <option>Negotiation</option>
+            <option>Perception</option>
+            <option>Resilience</option>
+            <option>Skulduggery</option>
+            <option>Stealth</option>
+            <option>Streetwise</option>
+            <option>Surveillance</option>
+            <option>Underworld</option>
+            <option>Vigilance</option>
+          </select>
+          <input id="newSkillRank" type="number" value="0" min="0" style="width:80px" />
+          <button id="addSkillBtn">Add</button>
+        </div>
+      </div>
+
+      <div>
+        <label>Weapons & Gear</label>
+        <textarea id="gear" rows="3" placeholder="Blaster pistol, Vibroknife, Armor, Grenades..."></textarea>
+      </div>
+
+      <div style="display:flex;gap:8px;align-items:center">
+        <button id="gainXpBtn">+5 XP</button>
+        <div class="meta">XP: <span id="xp">0</span></div>
+      </div>
+
+      <!-- Dice roller -->
+      <div class="dice-roller">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div><strong>FFG Dice Roller</strong><div class="meta" style="font-size:11px">Ability / Proficiency / Difficulty / Challenge / Boost / Setback / Force</div></div>
+          <div style="display:flex;gap:8px">
+            <button id="clearDiceBtn">Clear</button>
+            <button id="rollDiceBtn">Roll Dice</button>
+          </div>
+        </div>
+
+        <div class="dice-controls" style="margin-top:10px">
+          <label>Ability (green)<input type="number" id="diceAbility" min="0" value="0"/></label>
+          <label>Proficiency (yellow)<input type="number" id="diceProficiency" min="0" value="0"/></label>
+          <label>Difficulty (purple)<input type="number" id="diceDifficulty" min="0" value="0"/></label>
+          <label>Challenge (red)<input type="number" id="diceChallenge" min="0" value="0"/></label>
+          <label>Boost (blue)<input type="number" id="diceBoost" min="0" value="0"/></label>
+          <label>Setback (black)<input type="number" id="diceSetback" min="0" value="0"/></label>
+          <label>Force (white)<input type="number" id="diceForce" min="0" value="0"/></label>
+          <div style="align-self:center;font-size:12px;color:var(--muted)">Result</div>
+        </div>
+
+        <div id="diceResult" class="dice-result" style="margin-top:8px"></div>
+      </div>
+
+    </div>
+
+    <div id="emptyState" style="margin-top:24px">No character selected. Pick one from the left or create a new character.</div>
+
+    <!-- printable sheet (mirrors current character) -->
+    <div class="print-sheet" id="printSheet" aria-hidden="true">
+      <div class="sheet-header">
+        <div><strong id="ps_name">Name</strong><div id="ps_meta" class="meta">Species · Career</div></div>
+        <div class="meta">FFG Character Sheet</div>
+      </div>
+
+      <div class="sheet-grid" style="margin-top:12px">
+        <div class="sheet-section">
+          <h4>Characteristics</h4>
+          <div id="ps_stats"></div>
+        </div>
+        <div class="sheet-section">
+          <h4>Vitals</h4>
+          <div>Wounds: <span id="ps_wounds"></span></div>
+          <div>Strain: <span id="ps_strain"></span></div>
+          <div>Soak: <span id="ps_soak"></span></div>
+          <div>Defense: <span id="ps_defense"></span></div>
+        </div>
+
+        <div class="sheet-section" style="grid-column:1 / -1">
+          <h4>Skills</h4>
+          <div id="ps_skills"></div>
+        </div>
+
+        <div class="sheet-section" style="grid-column:1 / -1">
+          <h4>Gear & Notes</h4>
+          <div id="ps_gear"></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+/* ---------- Storage + Model ---------- */
+const STORAGE_KEY = 'ffg_sw_chars_v2';
+let chars = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+let selectedId = null;
+
+const defaultStats = ['Brawn','Agility','Intellect','Cunning','Willpower','Presence'];
+
+function uid(){ return 'id_'+Math.random().toString(36).slice(2,9); }
+function saveToStorage(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(chars)); }
+
+/* ---------- Build UI helpers ---------- */
+const charList = document.getElementById('charList');
+const editorForm = document.getElementById('editorForm');
+const emptyState = document.getElementById('emptyState');
+const charNameDisplay = document.getElementById('charNameDisplay');
+
+const nameFld = document.getElementById('name');
+const speciesFld = document.getElementById('species');
+const careerFld = document.getElementById('career');
+const notesFld = document.getElementById('notes');
+const xpDisplay = document.getElementById('xp');
+const woundsFld = document.getElementById('wounds');
+const strainFld = document.getElementById('strain');
+const soakFld = document.getElementById('soak');
+const defenseFld = document.getElementById('defense');
+const statsDiv = document.getElementById('stats');
+const skillList = document.getElementById('skillList');
+const skillPicker = document.getElementById('skillPicker');
+const newSkillRank = document.getElementById('newSkillRank');
+const gearFld = document.getElementById('gear');
+
+/* Build stat inputs */
+function buildStatsInputs(values={}){
+  statsDiv.innerHTML='';
+  for(const s of defaultStats){
+    const val = values[s] ?? 1;
+    const el = document.createElement('div');
+    el.className='stat';
+    el.innerHTML = `<div class="meta">${s}</div><b><input type="number" data-stat="${s}" min="0" value="${val}" /></b>`;
+    statsDiv.appendChild(el);
+  }
+}
+
+/* Render character list */
+function renderList(){
+  charList.innerHTML='';
+  for(const c of chars){
+    const el = document.createElement('div');
+    el.className='char-item' + (c.id===selectedId ? ' active' : '');
+    el.innerHTML = `<div><strong>${escapeHtml(c.name||'Unnamed')}</strong><div class="meta">${escapeHtml(c.career||'')} · XP ${c.xp||0}</div></div><div class="meta">${escapeHtml(c.species||'')}</div>`;
+    el.addEventListener('click',()=> selectCharacter(c.id));
+    charList.appendChild(el);
+  }
+}
+
+/* Select */
+function selectCharacter(id){
+  selectedId = id;
+  renderList();
+  renderEditor();
+}
+
+function getSelected(){ return chars.find(c=>c.id===selectedId); }
+
+/* Render editor */
+function renderEditor(){
+  const s = getSelected();
+  if(!s){ editorForm.style.display='none'; emptyState.style.display='block'; charNameDisplay.textContent='— select a character —'; return; }
+  editorForm.style.display='block'; emptyState.style.display='none';
+  charNameDisplay.textContent = s.name || 'Unnamed';
+  nameFld.value=s.name; speciesFld.value=s.species; careerFld.value=s.career; notesFld.value=s.notes||'';
+  xpDisplay.textContent = s.xp||0;
+  woundsFld.value = s.wounds||0; strainFld.value = s.strain||0; soakFld.value = s.soak||0; defenseFld.value = s.defense||0;
+  buildStatsInputs(s.stats);
+  renderSkills(s.skills);
+  gearFld.value = s.gear || '';
+}
+
+/* Render skills */
+function renderSkills(arr){
+  skillList.innerHTML='';
+  for(let i=0;i<arr.length;i++){
+    const sk = arr[i];
+    const el = document.createElement('div');
+    el.className='skill';
+    el.innerHTML = `<div>${escapeHtml(sk.name)}</div><div style="display:flex;gap:8px;align-items:center"><input type="number" data-idx="${i}" value="${sk.rank}" style="width:60px"/><button data-del="${i}">Del</button></div>`;
+    skillList.appendChild(el);
+  }
+  // bind changes
+  skillList.querySelectorAll('input[type=number]').forEach(n=>n.addEventListener('change',e=>{
+    const idx=+e.target.dataset.idx; const v=+e.target.value; const s=getSelected();
+    if(s){ s.skills[idx].rank=v; saveToStorage(); renderList(); renderEditor(); }
+  }));
+  skillList.querySelectorAll('button[data-del]').forEach(b=>b.addEventListener('click',e=>{
+    const idx=+e.target.dataset.del; const s=getSelected();
+    if(!s) return; s.skills.splice(idx,1); saveToStorage(); renderList(); renderEditor();
+  }));
+}
+
+/* helper escape html */
+function escapeHtml(str){ return String(str||'').replace(/[&<>"']/g, function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}[m]; }); }
+
+/* ---------- UI actions ---------- */
+document.getElementById('newBtn').addEventListener('click',()=>{
+  const c = { id:uid(), name:'New Character', species:'Human', career:'Unknown', notes:'', xp:0,
+    wounds:0,strain:0,soak:0,defense:0,
+    stats:{Brawn:2,Agility:2,Intellect:2,Cunning:2,Willpower:2,Presence:2},
+    skills:[], gear:'', created:Date.now()
+  };
+  chars.unshift(c); selectedId = c.id; saveToStorage(); renderList(); renderEditor();
+});
+
+document.getElementById('saveBtn').addEventListener('click',()=>{
+  const s = getSelected(); if(!s) return alert('Select a character');
+  s.name=nameFld.value; s.species=speciesFld.value; s.career=careerFld.value; s.notes=notesFld.value;
+  s.wounds=+woundsFld.value||0; s.strain=+strainFld.value||0; s.soak=+soakFld.value||0; s.defense=+defenseFld.value||0;
+  s.stats={}; statsDiv.querySelectorAll('input[data-stat]').forEach(i=> s.stats[i.dataset.stat]=+i.value||0);
+  s.gear = gearFld.value;
+  saveToStorage(); renderList(); renderEditor(); alert('Saved');
+});
+
+document.getElementById('downloadBtn').addEventListener('click',()=>{
+  const s = getSelected(); if(!s) return alert('Select a character');
+  const data = JSON.stringify(s,null,2); const blob = new Blob([data],{type:'application/json'}); const url = URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=(s.name||'character')+'.json'; a.click(); URL.revokeObjectURL(url);
+});
+
+document.getElementById('deleteBtn').addEventListener('click',()=>{
+  if(!selectedId) return alert('No character selected'); if(!confirm('Delete this character?')) return;
+  chars = chars.filter(c=>c.id!==selectedId); selectedId = chars[0]?.id || null; saveToStorage(); renderList(); renderEditor();
+});
+
+document.getElementById('duplicateBtn').addEventListener('click',()=>{
+  const s=getSelected(); if(!s) return alert('Select a character');
+  const copy = JSON.parse(JSON.stringify(s)); copy.id=uid(); copy.name = copy.name + ' (copy)'; chars.unshift(copy); selectedId = copy.id; saveToStorage(); renderList(); renderEditor();
+});
+
+document.getElementById('exportBtn').addEventListener('click',()=>{
+  const data = JSON.stringify(chars,null,2); const blob = new Blob([data],{type:'application/json'}); const url = URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download='ffg_sw_characters.json'; a.click(); URL.revokeObjectURL(url);
+});
+
+document.getElementById('importBtn').addEventListener('click',()=> document.getElementById('importFile').click());
+document.getElementById('importFile').addEventListener('change',async(e)=>{
+  const f = e.target.files[0]; if(!f) return; try{ const txt = await f.text(); const imported = JSON.parse(txt); if(!Array.isArray(imported) && !imported.id) {
+    // single char -> merge
+    const it = Array.isArray(imported)? imported : [imported];
+    for(const itc of it){ if(!itc.id) itc.id = uid(); chars.unshift(itc); }
+  } else {
+    const arr = Array.isArray(imported)? imported : [imported];
+    for(const itc of arr){ if(!itc.id) itc.id = uid(); chars.unshift(itc); }
+  }
+  saveToStorage(); renderList(); renderEditor(); alert('Imported');
+  }catch(err){ alert('Import failed: '+err.message) }
+  e.target.value='';
+});
+
+document.getElementById('clearAllBtn').addEventListener('click',()=>{
+  if(!confirm('Clear all characters from storage?')) return; chars=[]; selectedId=null; saveToStorage(); renderList(); renderEditor();
+});
+
+document.getElementById('seedBtn').addEventListener('click',()=>{
+  const sample = {
+    id:uid(), name:'Eren Valos', species:"Human", career:'Smuggler', notes:'Quick with a blaster and quicker with a lie.', xp:25,
+    wounds:2,strain:1,soak:1,defense:1,
+    stats:{Brawn:2,Agility:3,Intellect:2,Cunning:3,Willpower:2,Presence:2},
+    skills:[{name:'Piloting (Space)',rank:2},{name:'Skulduggery',rank:2},{name:'Blaster',rank:3}],
+    gear:'Light Blaster Pistol, Datapad, 2x Medpatch', created:Date.now()
+  };
+  chars.unshift(sample); saveToStorage(); selectedId = sample.id; renderList(); renderEditor();
+});
+
+document.getElementById('addSkillBtn').addEventListener('click',()=>{
+  const s=getSelected(); if(!s) return alert('Select a character'); const name = skillPicker.value || prompt('Skill name'); if(!name) return;
+  const rank = Math.max(0, +newSkillRank.value || 0); s.skills.push({name,rank}); saveToStorage(); renderList(); renderEditor();
+});
+
+document.getElementById('gainXpBtn').addEventListener('click',()=>{
+  const s=getSelected(); if(!s) return; s.xp = (s.xp||0)+5; saveToStorage(); renderList(); renderEditor();
+});
+
+/* initial render */
+if(chars.length>0){ selectedId = chars[0].id }
+renderList(); renderEditor();
+
+/* ---------- Dice roller (FFG) ---------- */
+const diceTables = {
+  Ability:["","S","S","SS","A","A","SA","AA"], // d8 (represented as combinations)
+  Proficiency:["","S","S","SS","A","A","SA","SA","AA","AA","TRIUMPH","S"], // d12 variety (TRIUMPH used)
+  Difficulty:["","F","F","FF","T","T","FT","TT"], // d8
+  Challenge:["","F","F","FF","T","T","FT","FT","TT","TT","DESPAIR","F"], // d12 with DESPAIR
+  Boost:["","S","A","SA","AA",""], // d6
+  Setback:["","F","F","T","T",""], // d6
+  Force:["D","D","D","D","D","DD","L","L","L","LL","LL","LL"] // D=dark pip, L=light pip
+};
+
+function rollDieType(type){
+  const faces = diceTables[type];
+  return faces[Math.floor(Math.random()*faces.length)];
+}
+
+function normalizeSymbol(sym){
+  // convert internal tokens to readable tokens
+  if(!sym) return [];
+  if(typeof sym!=='string') return [];
+  // TRIUMPH maps to Success + Triumph in FFG semantics, DESPAIR maps to Failure + Despair
+  if(sym === "TRIUMPH") return ["S","TRIUMPH"];
+  if(sym === "DESPAIR") return ["F","DESPAIR"];
+  // Force pips might be 'DD' or 'LL' etc -> break into characters
+  if(sym.length>1 && (sym.includes('D') || sym.includes('L'))) return sym.split('');
+  // pairs like 'SA' -> ['S','A'] or 'SS'-> ['S','S']
+  return sym.split('');
+}
+
+document.getElementById('rollDiceBtn').addEventListener('click', ()=>{
+  const types = [
+    ['Ability','diceAbility'],
+    ['Proficiency','diceProficiency'],
+    ['Difficulty','diceDifficulty'],
+    ['Challenge','diceChallenge'],
+    ['Boost','diceBoost'],
+    ['Setback','diceSetback'],
+    ['Force','diceForce']
+  ];
+  const results = [];
+  const detailLog = [];
+  for(const [type, id] of types){
+    const input = document.getElementById(id);
+    const count = +input.value || 0;
+    for(let i=0;i<count;i++){
+      const face = rollDieType(type);
+      const syms = normalizeSymbol(face);
+      results.push(...syms);
+      detailLog.push(`${type}: ${face || 'blank'}`);
+    }
+  }
+
+  // tally
+  const tally = {S:0,F:0,A:0,T:0,TRIUMPH:0,DESPAIR:0,D:0,L:0};
+  for(const r of results){
+    if(r=== 'S') tally.S++;
+    else if(r==='F') tally.F++;
+    else if(r==='A') tally.A++;
+    else if(r==='T') tally.T++;
+    else if(r==='TRIUMPH') tally.TRIUMPH++;
+    else if(r==='DESPAIR') tally.DESPAIR++;
+    else if(r==='D') tally.D++;
+    else if(r==='L') tally.L++;
+  }
+
+  const netSuccess = tally.S - tally.F;
+  const netAdv = tally.A - tally.T;
+
+  // Format
+  let out = `<strong>Rolls:</strong><br/>${detailLog.join(', ')}<hr/>`;
+  out += `<strong>Net Success:</strong> ${netSuccess} &nbsp; <strong>Net Advantage:</strong> ${netAdv}<br/>`;
+  if(tally.TRIumph || tally.TRIUMPH){} // nothing; just legacy possible capitalization
+  if(tally.TRIUMPH) out += `<strong>Triumph:</strong> ${tally.TRIUMPH}<br/>`;
+  if(tally.DESPAIR) out += `<strong>Despair:</strong> ${tally.DESPAIR}<br/>`;
+  if(tally.L || tally.D) out += `<strong>Force:</strong> Light ${tally.L} / Dark ${tally.D}<br/>`;
+
+  // Also show a short symbol tally
+  out += `<div style="margin-top:6px;font-size:13px;color:var(--muted)"><em>Symbol tally — S:${tally.S} F:${tally.F} A:${tally.A} T:${tally.T}</em></div>`;
+
+  document.getElementById('diceResult').innerHTML = out;
+});
+
+document.getElementById('clearDiceBtn').addEventListener('click', ()=>{
+  ['diceAbility','diceProficiency','diceDifficulty','diceChallenge','diceBoost','diceSetback','diceForce'].forEach(id=>document.getElementById(id).value = 0);
+  document.getElementById('diceResult').innerHTML = '';
+});
+
+/* ---------- Print sheet ---------- */
+document.getElementById('printBtn').addEventListener('click', ()=>{
+  const s = getSelected(); if(!s) return alert('Select a character to print');
+  populatePrintSheet(s);
+  // show print sheet element for print preview
+  document.getElementById('printSheet').style.display = 'block';
+  // Kick the print dialog
+  window.print();
+  // hide after printing
+  setTimeout(()=>{ document.getElementById('printSheet').style.display = 'none'; }, 500);
+});
+
+function populatePrintSheet(s){
+  document.getElementById('ps_name').textContent = s.name || 'Unnamed';
+  document.getElementById('ps_meta').textContent = `${s.species || ''} · ${s.career || ''} · XP ${s.xp||0}`;
+  // stats
+  const st = defaultStats.map(k => `<div style="display:flex;justify-content:space-between"><strong>${k}</strong><span>${(s.stats && s.stats[k])||0}</span></div>`).join('');
+  document.getElementById('ps_stats').innerHTML = st;
+  document.getElementById('ps_wounds').textContent = s.wounds||0;
+  document.getElementById('ps_strain').textContent = s.strain||0;
+  document.getElementById('ps_soak').textContent = s.soak||0;
+  document.getElementById('ps_defense').textContent = s.defense||0;
+  // skills
+  document.getElementById('ps_skills').innerHTML = (s.skills||[]).map(x=>`<div style="display:flex;justify-content:space-between"><div>${escapeHtml(x.name)}</div><div>${x.rank}</div></div>`).join('');
+  // gear & notes
+  document.getElementById('ps_gear').innerHTML = `<div style="white-space:pre-wrap">${escapeHtml(s.gear||'')}\n\nNotes:\n${escapeHtml(s.notes||'')}</div>`;
+}
+
+/* ---------- Utility: render after data changes ---------- */
+function refreshUI(){
+  renderList(); renderEditor();
+}
+</script>
+
+</body>
+</html>
