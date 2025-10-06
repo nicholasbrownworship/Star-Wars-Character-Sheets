@@ -8,14 +8,13 @@
 <style>
 :root{
   --bg-overlay: rgba(2,6,12,0.55);
-  --panel: rgba(10,18,28,0.85);
+  --panel: rgba(10,18,28,0.72);
   --accent:#44d7ff;
   --muted:#98a0b3;
   --glass: rgba(255,255,255,0.03);
-  --highlight: rgba(68,215,255,0.2);
   font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
 }
-html,body{height:100%;margin:0;overflow:hidden}
+html,body{height:100%;margin:0}
 body{
   background: url('4107909.jpg') no-repeat center center fixed;
   background-size: cover;
@@ -24,104 +23,45 @@ body{
 }
 body::before{
   content:""; position:fixed; inset:0;
-  background:linear-gradient(180deg, rgba(0,0,0,0.45), rgba(0,0,0,0.7));
+  background:linear-gradient(180deg, rgba(0,0,0,0.45), rgba(0,0,0,0.65));
   z-index:-1;
 }
-.app{display:grid;grid-template-columns:340px 1fr;gap:20px;height:100vh;padding:24px;align-items:start;animation:fadeIn 0.8s ease-out}
-.panel{
-  background:var(--panel);
-  border-radius:16px;
-  padding:18px;
-  box-shadow:0 12px 40px rgba(0,0,0,0.7);
-  border:1px solid rgba(68,215,255,0.1);
-  backdrop-filter: blur(4px);
-  transform:translateY(10px);
-  opacity:0;
-  animation:slideFadeIn 0.6s forwards;
-}
-aside.panel{height:calc(100vh - 48px);overflow:auto}
-main.panel{height:calc(100vh - 48px);overflow:auto;position:relative}
-
-header{display:flex;gap:12px;align-items:center;margin-bottom:12px}
-header .logo{
-  width:60px;height:60px;border-radius:12px;
-  background:linear-gradient(135deg,var(--accent),#8a6b44);
-  display:flex;align-items:center;justify-content:center;
-  font-weight:700;font-family:'Orbitron',sans-serif;color:#021;
-  box-shadow:0 6px 18px rgba(68,215,255,0.1);
-  font-size:20px;
-}
-h1{margin:0;font-size:18px}
+.app{display:grid;grid-template-columns:320px 1fr;gap:18px;height:100vh;padding:20px;align-items:start}
+.panel{background:var(--panel);border-radius:12px;padding:14px;box-shadow:0 10px 40px rgba(3,10,18,0.75);border:1px solid rgba(68,215,255,0.08)}
+aside.panel{height:calc(100vh - 40px);overflow:auto}
+main.panel{height:calc(100vh - 40px);overflow:auto;position:relative}
+.datapad{background:linear-gradient(180deg, rgba(6,24,36,0.86), rgba(8,16,28,0.6));border:1px solid rgba(68,215,255,0.06);box-shadow:0 6px 30px rgba(0,120,160,0.12);border-radius:16px;padding:18px}
+header{display:flex;gap:12px;align-items:center}
+header .logo{width:52px;height:52px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#8a6b44);display:flex;align-items:center;justify-content:center;font-weight:700;font-family:'Orbitron',sans-serif;color:#021;box-shadow:0 6px 18px rgba(68,215,255,0.06)}
+h1{margin:0;font-size:16px}
 .meta{font-size:12px;color:var(--muted)}
-
-.character-list{margin-top:16px}
-.char-item{
-  display:flex;justify-content:space-between;align-items:center;
-  padding:10px;border-radius:12px;
-  background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-  margin-bottom:8px;cursor:pointer;
-  transition:all 0.2s;
-}
-.char-item:hover{background:var(--highlight);transform:translateX(3px);box-shadow:0 0 12px var(--accent);}
-.char-item.active{outline:2px solid var(--accent)}
-
-.editor{display:flex;flex-direction:column;gap:14px}
-.row{display:flex;gap:14px}
+.character-list{margin-top:12px}
+.char-item{display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));margin-bottom:8px;cursor:pointer;transition:all 0.2s}
+.char-item:hover{background:linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));transform:scale(1.02)}
+.char-item.active{outline:2px solid rgba(68,215,255,0.08)}
+.editor{display:flex;flex-direction:column;gap:12px}
+.row{display:flex;gap:12px}
 .col{flex:1}
 label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px}
-input[type=text], input[type=number], select, textarea{
-  width:100%;padding:8px;border-radius:8px;
-  border:1px solid rgba(255,255,255,0.06);
-  background:rgba(0,0,0,0.22);color:inherit;
-  transition:0.2s;
-}
-input[type=text]:focus,input[type=number]:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 6px var(--accent);}
+input[type=text], input[type=number], select, textarea{width:100%;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:rgba(0,0,0,0.22);color:inherit}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{margin:0}
 textarea{resize:vertical}
-
-.stat-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-top:10px}
-.stat{
-  padding:10px;border-radius:10px;
-  background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-  text-align:center;
-  transition:all 0.3s;
-}
-.stat:hover{background:var(--highlight);transform:scale(1.03);box-shadow:0 0 8px var(--accent);}
+.stat-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:8px}
+.stat{padding:8px;border-radius:8px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));text-align:center}
 .stat input{width:56px;text-align:center;font-size:16px;background:transparent;border:0;color:inherit}
-
 .skills{display:flex;flex-direction:column;gap:6px;max-height:400px;overflow-y:auto}
-.skill{display:flex;justify-content:space-between;align-items:center;padding:6px;border-radius:8px;background:var(--glass);transition:all 0.2s}
-.skill:hover{background:var(--highlight);transform:scale(1.02)}
-.skill .skillDice{display:flex;gap:4px}
-.dice-dot{width:16px;height:16px;border-radius:50%;display:inline-block;border:1px solid rgba(255,255,255,0.15);vertical-align:middle}
-.dice-dot.ability{background:green}
-.dice-dot.proficiency{background:yellow}
-.dice-dot.boost{background:blue}
-.dice-dot.force{background:white;border:1px solid #ccc}
-
-.dice-roller{margin-top:12px;padding:14px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:12px;box-shadow:0 4px 20px rgba(0,120,160,0.1);}
+.skill{display:flex;justify-content:space-between;align-items:center;padding:6px;border-radius:8px;background:var(--glass)}
+.skill .skillDice{display:flex;gap:4px;flex-wrap:wrap}
+.dice-roller{margin-top:8px;padding:12px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:8px}
 .dice-controls{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
 .dice-controls label{display:flex;flex-direction:column;align-items:center;font-size:12px}
-
-.dice-result{background:rgba(0,0,0,0.25);padding:10px;border-radius:8px;min-height:48px;display:flex;flex-wrap:wrap;gap:2px;align-items:center;box-shadow:inset 0 0 6px rgba(68,215,255,0.1);}
-.dice-result img{opacity:0; animation:fadeInUp 0.4s forwards;}
-.net-result{margin-top:8px;font-weight:600;font-size:14px;transition:all 0.3s;transform:scale(1)}
-.net-positive{color:#4caf50; animation:netPop 0.4s forwards;}
-.net-negative{color:#f44336; animation:netPop 0.4s forwards;}
-.net-neutral{color:#fff; animation:netPop 0.4s forwards;}
-
+.dice-result{background:rgba(0,0,0,0.25);padding:10px;border-radius:8px;min-height:48px;display:flex;flex-wrap:wrap;gap:2px;align-items:center}
 .actions{display:flex;gap:8px;flex-wrap:wrap}
-button{
-  background:transparent;border:1px solid rgba(255,255,255,0.08);
-  padding:6px 12px;border-radius:10px;color:inherit;
-  cursor:pointer;transition:all 0.2s;
-}
-button:hover{border-color:var(--accent);background:var(--highlight);}
-
-/* ====== ANIMATIONS ====== */
-@keyframes fadeIn{from{opacity:0} to{opacity:1}}
-@keyframes slideFadeIn{from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)}}
-@keyframes fadeInUp{from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)}}
-@keyframes netPop{0%{transform:scale(0.8);opacity:0} 100%{transform:scale(1);opacity:1}}
+button{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:6px 10px;border-radius:8px;color:inherit;cursor:pointer;transition:all 0.2s}
+button:hover{background:rgba(68,215,255,0.08)}
+.net-positive{color:#4fff4f;font-weight:700}
+.net-negative{color:#ff4f4f;font-weight:700}
+.net-neutral{color:#ffffff;font-weight:700}
 </style>
 </head>
 <body>
@@ -215,7 +155,7 @@ button:hover{border-color:var(--accent);background:var(--highlight);}
 <button id="clearDiceBtn">Clear</button>
 </div>
 <div class="dice-result" id="diceResult"></div>
-<div class="net-result" id="netResult"></div>
+<div class="dice-result" id="netResult" style="margin-top:6px"></div>
 </div>
 </main>
 </div>
@@ -271,25 +211,50 @@ function renderStats(stats){
     statGrid.appendChild(div);
   });
 }
+
+// ================== SKILLS WITH EDITABLE RANKS ==================
 function renderSkills(skills){
-  const skillList=document.getElementById("skillList"); skillList.innerHTML="";
+  const skillList=document.getElementById("skillList"); 
+  skillList.innerHTML="";
+  
   ALL_SKILLS.forEach(skill=>{
     if(!skills[skill]) skills[skill]={rank:0};
     const rank=skills[skill].rank||0;
     const attr=Object.keys(skillAttributes).find(a=>skillAttributes[a].includes(skill));
     const attrValue=(selectedIndex!==null && characters[selectedIndex].stats[attr])||0;
-    const container=document.createElement("div"); container.className="skill";
-    container.innerHTML=`<span>${skill}</span><div class="skillDice"></div>`;
-    const diceContainer=container.querySelector(".skillDice");
-    let total=Math.max(rank,attrValue),upgrade=Math.min(rank,attrValue);
+
+    const container=document.createElement("div"); 
+    container.className="skill";
+
+    container.innerHTML=`
+      <span>${skill}</span>
+      <input type="number" min="0" max="5" value="${rank}" style="width:40px" data-skill="${skill}" />
+      <div class="skillDice"></div>
+    `;
+
+    const rankInput = container.querySelector("input");
+    rankInput.oninput = (e) => {
+      const val = parseInt(e.target.value)||0;
+      skills[skill].rank = val;
+      renderSkills(skills);
+      saveToStorage();
+    };
+
+    const diceContainer = container.querySelector(".skillDice");
+    let total = Math.max(rank, attrValue);
+    let upgrade = Math.min(rank, attrValue);
     for(let i=0;i<total;i++){
-      const dot=document.createElement("span"); dot.className="dice-dot ability";
-      if(upgrade>0){dot.className="dice-dot proficiency"; upgrade--;}
+      const dot = document.createElement("span");
+      dot.className = upgrade>0 ? "dice-dot proficiency" : "dice-dot ability";
+      upgrade--;
       diceContainer.appendChild(dot);
     }
+
     skillList.appendChild(container);
   });
 }
+
+// ================== CHARACTER EDIT ==================
 function openCharacter(index){
   selectedIndex=index;
   document.getElementById("editorForm").style.display="block";
@@ -308,6 +273,7 @@ function openCharacter(index){
   renderSkills(c.skills||{});
   refreshCharList();
 }
+
 document.getElementById("saveBtn").onclick=()=>{
   if(selectedIndex===null) return;
   const c=characters[selectedIndex];
@@ -336,73 +302,54 @@ function rollDice(){
     setback:+document.getElementById("diceSetback").value||0,
     force:+document.getElementById("diceForce").value||0
   };
-  const result={success:0,advantage:0,failure:0,threat:0,triumph:0,despair:0,light:0,dark:0};
-  for(const [die,count] of Object.entries(counts)){
-    for(let i=0;i<count;i++){
-      const faces=diceFaces[die];
-      const face=faces[Math.floor(Math.random()*faces.length)];
-      if(face.includes("success")) result.success++;
-      if(face.includes("failure")) result.failure++;
-      if(face.includes("advantage")) result.advantage++;
-      if(face.includes("threat")) result.threat++;
-      if(face.includes("triumph")){result.triumph++;result.success++;}
-      if(face.includes("despair")){result.despair++;result.failure++;}
-      if(face.includes("light")) result.light++;
-      if(face.includes("dark")) result.dark++;
+  const result={success:0,advantage:0,failure:0,threat:0,triumph:0,despair:0};
+  const resultDiv=document.getElementById("diceResult");
+  resultDiv.innerHTML="";
+  Object.keys(counts).forEach(type=>{
+    for(let i=0;i<counts[type];i++){
+      const die=diceFaces[type][Math.floor(Math.random()*diceFaces[type].length)];
+      const img=document.createElement("img");
+      img.src="dice/"+die;
+      img.style.width="36px"; img.style.height="36px"; img.style.margin="2px";
+      resultDiv.appendChild(img);
+
+      // tally
+      if(type==="ability"){
+        if(die.includes("success_success")||die.includes("success_adv")) result.success+=die.includes("success_success")?2:1;
+        if(die.includes("advantage")&&die!=="green_success_success.jpg"&&die!=="green_success_adv.jpg") result.advantage++;
+      } else if(type==="proficiency"){
+        if(die.includes("success_success")) result.success+=2;
+        else if(die.includes("success_adv")||die.includes("success")) result.success++;
+        if(die.includes("advantage")&&die!=="yellow_success_success.jpg"&&die!=="yellow_success_adv.jpg") result.advantage++;
+        if(die.includes("triumph")) { result.success++; result.triumph++; }
+      } else if(type==="boost"){
+        if(die.includes("success")) result.success++;
+        if(die.includes("advantage")) result.advantage++;
+      } else if(type==="difficulty"){
+        if(die.includes("failure_failure")||die.includes("failure")) result.failure+=die.includes("failure_failure")?2:1;
+        if(die.includes("threat")&&die!=="purple_failure_failure.jpg"&&die!=="purple_failure_threat.jpg") result.threat++;
+      } else if(type==="challenge"){
+        if(die.includes("failure_failure")||die.includes("failure")) result.failure+=die.includes("failure_failure")?2:1;
+        if(die.includes("threat")&&die!=="red_failure_failure.jpg"&&die!=="red_failure_threat.jpg") result.threat++;
+        if(die.includes("despair")) { result.failure++; result.despair++; }
+      } else if(type==="setback"){
+        if(die.includes("failure")) result.failure++;
+        if(die.includes("threat")) result.threat++;
+      }
     }
-  }
-  const diceResult = document.getElementById("diceResult");
-  diceResult.innerHTML=`<div>Success: ${result.success}, Failure: ${result.failure}, Advantage: ${result.advantage}, Threat: ${result.threat}, Triumph: ${result.triumph}, Despair: ${result.despair}</div>`;
-  const netResult=document.getElementById("netResult");
-  const netSuccess=result.success-result.failure;
-  const netAdv=result.advantage-result.threat;
-  netResult.innerHTML=`Net Success: <span class="${netSuccess>0?'net-positive':netSuccess<0?'net-negative':'net-neutral'}">${netSuccess}</span> | Net Advantage: <span class="${netAdv>0?'net-positive':netAdv<0?'net-negative':'net-neutral'}">${netAdv}</span> | Triumph: ${result.triumph} | Despair: ${result.despair}`;
+  });
+  const netSuccess = result.success - result.failure;
+  const netAdv = result.advantage - result.threat;
+
+  const netDiv=document.getElementById("netResult");
+  netDiv.innerHTML=`<span class="${netSuccess>0?"net-positive":netSuccess<0?"net-negative":"net-neutral"}">Success: ${netSuccess}</span> &nbsp; 
+                   <span class="${netAdv>0?"net-positive":netAdv<0?"net-negative":"net-neutral"}">Advantage: ${netAdv}</span> &nbsp; 
+                   <span class="net-neutral">Triumph: ${result.triumph}</span> &nbsp; 
+                   <span class="net-neutral">Despair: ${result.despair}</span>`;
 }
 
 document.getElementById("rollDiceBtn").onclick=rollDice;
-document.getElementById("clearDiceBtn").onclick=()=>{document.getElementById("diceResult").innerHTML="";document.getElementById("netResult").innerHTML="";};
-
-// ================== MENU BUTTONS ==================
-document.getElementById("newBtn").onclick=()=>{
-  const newChar={name:"New Character",species:"",career:"",notes:"",wounds:0,strain:0,soak:0,defense:0,gear:"",stats:{},skills:{}};
-  characters.push(newChar); selectedIndex=characters.length-1;
-  saveToStorage(); refreshCharList(); openCharacter(selectedIndex);
-};
-document.getElementById("duplicateBtn").onclick=()=>{
-  if(selectedIndex===null) return;
-  const dup=JSON.parse(JSON.stringify(characters[selectedIndex]));
-  dup.name+=" Copy";
-  characters.push(dup); selectedIndex=characters.length-1;
-  saveToStorage(); refreshCharList(); openCharacter(selectedIndex);
-};
-document.getElementById("deleteBtn").onclick=()=>{
-  if(selectedIndex===null) return;
-  if(confirm("Delete this character?")) characters.splice(selectedIndex,1);
-  selectedIndex=null; document.getElementById("editorForm").style.display="none"; saveToStorage(); refreshCharList();
-};
-document.getElementById("exportBtn").onclick=()=>{
-  const data=JSON.stringify(characters,null,2);
-  const blob=new Blob([data],{type:"application/json"});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement("a");
-  a.href=url;a.download="characters.json";a.click();URL.revokeObjectURL(url);
-};
-document.getElementById("importBtn").onclick=()=>document.getElementById("importFile").click();
-document.getElementById("importFile").onchange=(e)=>{
-  const file=e.target.files[0];
-  if(!file) return;
-  const reader=new FileReader();
-  reader.onload=()=>{characters=JSON.parse(reader.result);selectedIndex=null;document.getElementById("editorForm").style.display="none";saveToStorage();refreshCharList();}
-  reader.readAsText(file);
-};
-document.getElementById("seedBtn").onclick=()=>{
-  const sample={name:"Luke Skywalker",species:"Human",career:"Jedi",notes:"A promising Jedi.",wounds:5,strain:3,soak:2,defense:2,gear:"Lightsaber, Robes",stats:{Brawn:2,Agility:3,Intellect:4,Cunning:1,Willpower:3,Presence:2},skills:{Astrogation:{rank:2},Lightsaber:{rank:3}}};
-  characters.push(sample); selectedIndex=characters.length-1; saveToStorage(); refreshCharList(); openCharacter(selectedIndex);
-};
-document.getElementById("clearAllBtn").onclick=()=>{
-  if(confirm("Clear all characters?")){characters=[];selectedIndex=null;document.getElementById("editorForm").style.display="none";saveToStorage();refreshCharList();}
-};
-document.getElementById("printBtn").onclick=()=>window.print();
+document.getElementById("clearDiceBtn").onclick=()=>{document.getElementById("diceResult").innerHTML=""; document.getElementById("netResult").innerHTML="";};
 
 // ================== INITIALIZE ==================
 loadFromStorage(); refreshCharList();
