@@ -50,12 +50,12 @@ textarea{resize:vertical}
 .skills{display:flex;flex-direction:column;gap:6px;max-height:400px;overflow-y:auto}
 .skill{display:flex;justify-content:space-between;align-items:center;padding:6px;border-radius:8px;background:var(--glass)}
 .skill input{width:40px;margin-left:8px}
-.skill .skillDice{min-width:60px;display:flex;gap:4px;flex-wrap:wrap}
-.dice-dot{display:flex;width:18px;height:18px;border-radius:4px;border:1px solid rgba(255,255,255,0.15);cursor:pointer;align-items:center;justify-content:center;font-size:12px}
-.dice-dot.ability{background:rgba(0,255,0,0.3);}
-.dice-dot.proficiency{background:rgba(255,255,0,0.3);}
-.dice-dot.boost{background:rgba(0,0,255,0.3);}
-.dice-dot.force{background:rgba(255,255,255,0.3);color:#000;}
+.skill .skillDice{min-width:60px;display:flex;gap:4px}
+.dice-dot{display:inline-block;width:14px;height:14px;border-radius:50%;border:1px solid rgba(255,255,255,0.15);cursor:pointer;vertical-align:middle;}
+.dice-dot.ability{background:green;}
+.dice-dot.proficiency{background:yellow;}
+.dice-dot.boost{background:blue;}
+.dice-dot.force{background:white; border:1px solid #ccc;}
 .dice-dot.selected{box-shadow:0 0 4px #fff;}
 .dice-roller{margin-top:8px;padding:12px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:8px}
 .dice-controls{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
@@ -210,13 +210,13 @@ const ALL_SKILLS=[
 "Resilience","Skulduggery","Stealth","Streetwise","Survival","Vigilance","Lightsaber"
 ];
 
-const SKILL_ATTRIBUTES = {
-  "Astrogation":"Intellect","Athletics":"Brawn","Brawl":"Brawn","Computers":"Intellect",
-  "Coordination":"Agility","Cool":"Presence","Deception":"Cunning","Discipline":"Willpower",
-  "Leadership":"Presence","Mechanics":"Intellect","Medicine":"Intellect","Negotiation":"Presence",
-  "Perception":"Cunning","Piloting (Planetary)":"Agility","Piloting (Space)":"Agility",
-  "Resilience":"Brawn","Skulduggery":"Cunning","Stealth":"Agility","Streetwise":"Cunning",
-  "Survival":"Cunning","Vigilance":"Willpower","Lightsaber":"Brawn"
+const SKILL_ATTRIBUTES={
+"Astrogation":"Intellect","Athletics":"Brawn","Brawl":"Brawn","Computers":"Intellect",
+"Coordination":"Agility","Cool":"Willpower","Deception":"Cunning","Discipline":"Willpower",
+"Leadership":"Presence","Mechanics":"Intellect","Medicine":"Intellect","Negotiation":"Presence",
+"Perception":"Cunning","Piloting (Planetary)":"Agility","Piloting (Space)":"Agility",
+"Resilience":"Willpower","Skulduggery":"Cunning","Stealth":"Agility","Streetwise":"Cunning",
+"Survival":"Cunning","Vigilance":"Cunning","Lightsaber":"Brawn"
 };
 
 let characters=[],selectedIndex=null;
@@ -224,10 +224,7 @@ let characters=[],selectedIndex=null;
 const diceFaces={
 ability:["green_blank.jpg","green_success.jpg","green_success_success.jpg","green_success_adv.jpg","green_advantage.jpg","green_advantage_advantage.jpg"],
 proficiency:["yellow_blank.jpg","yellow_success.jpg","yellow_success_adv.jpg","yellow_success_adv.jpg","yellow_success_success.jpg","yellow_success_success.jpg","yellow_advantage.jpg","yellow_advantage.jpg","yellow_triumph.jpg"],
-difficulty:["purple_blank.jpg","purple_failure.jpg","purple_failure_failure.jpg","purple_failure_threat.jpg","purple_threat.jpg","purple_threat.jpg","purple_threat_threat.jpg"],
-challenge:["red_blank.jpg","red_despair.jpg","red_failure.jpg","red_failure.jpg","red_failure_failure.jpg","red_failure_failure.jpg","red_failure_threat.jpg","red_failure_threat.jpg","red_threat.jpg","red_threat.jpg","red_threat_threat.jpg","red_threat_threat.jpg"],
 boost:["blue_blank.jpg","blue_blank.jpg","blue_success.jpg","blue_success_adv.jpg","blue_advantage.jpg","blue_advantage_adv.jpg"],
-setback:["black_blank.jpg","black_blank.jpg","black_failure.jpg","black_failure.jpg","black_failure_threat.jpg","black_threat.jpg","black_threat.jpg"],
 force:["white_dark.jpg","white_dark.jpg","white_dark.jpg","white_dark.jpg","white_dark.jpg","white_dark.jpg","white_light.jpg","white_light.jpg","white_light_light.jpg","white_light_light.jpg","white_light_light.jpg","white_dark_dark.jpg"]
 };
 
@@ -263,69 +260,68 @@ function openCharacter(index){
   document.getElementById("gear").value=c.gear||"";
   renderStats(c.stats||{});
   renderSkills(c.skills||{});
+  updateDiceRollerFromSkills();
   refreshCharList();
 }
 
+// --- Stats ---
 function renderStats(stats){
-  const container=document.getElementById("stats");
-  container.innerHTML="";
+  const statGrid=document.getElementById("stats");
+  statGrid.innerHTML="";
   ["Brawn","Agility","Intellect","Cunning","Willpower","Presence"].forEach(stat=>{
     const div=document.createElement("div");
     div.className="stat";
-    div.innerHTML=`<div>${stat}</div><input type="number" min="0" value="${stats[stat]||0}" data-stat="${stat}">`;
-    div.querySelector("input").oninput=e=>{
+    div.innerHTML=`<div>${stat}</div><input type="number" min="0" value="${stats[stat]||0}" data-stat="${stat}" />`;
+    div.querySelector("input").oninput=(e)=>{
       stats[stat]=parseInt(e.target.value)||0;
       saveCharacter();
       renderSkills(characters[selectedIndex].skills||{});
     }
-    container.appendChild(div);
+    statGrid.appendChild(div);
   });
 }
 
+// --- Skills ---
 function renderSkills(skills){
-  const skillList=document.getElementById("skillList");
-  skillList.innerHTML="";
-  const c=characters[selectedIndex];
-  const stats=c.stats||{};
+  const list=document.getElementById("skillList");
+  list.innerHTML="";
   ALL_SKILLS.forEach(skill=>{
-    if(!skills[skill]) skills[skill]={rank:0,dice:{}};
-    const rank=skills[skill].rank||0;
-    const diceState=skills[skill].dice||{};
-    const characteristic=stats[SKILL_ATTRIBUTES[skill]]||0;
-    let abilityDice=characteristic;
-    let proficiencyDice=rank;
-    if(rank>characteristic){
-      proficiencyDice=characteristic;
-      abilityDice=rank-characteristic;
-    }
+    const skillRank=skills[skill]||0;
+    const attribute=SKILL_ATTRIBUTES[skill];
+    const attrValue=(characters[selectedIndex].stats||{})[attribute]||0;
+
+    // FFG Dice Calculation
+    const totalDice=Math.max(skillRank,attrValue);
+    const upgradeCount=Math.min(skillRank,attrValue);
+    const greenDiceCount=totalDice-upgradeCount;
+    const yellowDiceCount=upgradeCount;
 
     const div=document.createElement("div");
     div.className="skill";
-    let dotsHTML="";
-    for(let i=0;i<abilityDice;i++) dotsHTML+=`<span class="dice-dot ability" data-skill="${skill}"></span>`;
-    for(let i=0;i<proficiencyDice;i++) dotsHTML+=`<span class="dice-dot proficiency" data-skill="${skill}"></span>`;
-    if(diceState.boost) dotsHTML+=`<span class="dice-dot boost selected" data-skill="${skill}"></span>`;
-    if(diceState.force) dotsHTML+=`<span class="dice-dot force selected" data-skill="${skill}"></span>`;
-    div.innerHTML=`<span>${skill}</span><input type="number" min="0" value="${rank}" data-skill="${skill}"><div class="skillDice">${dotsHTML}</div>`;
-    div.querySelector("input").oninput=e=>{
-      skills[skill].rank=parseInt(e.target.value)||0;
-      renderSkills(skills);
-      saveCharacter();
+    div.innerHTML=`<div>${skill}</div><div class="skillDice"></div><input type="number" min="0" value="${skillRank}" data-skill="${skill}" />`;
+    const diceContainer=div.querySelector(".skillDice");
+    for(let i=0;i<yellowDiceCount;i++){
+      const dot=document.createElement("span");
+      dot.className="dice-dot proficiency";
+      diceContainer.appendChild(dot);
     }
-    div.querySelectorAll(".dice-dot").forEach(dot=>{
-      dot.onclick=()=>{
-        const type=dot.classList.contains("boost")?"boost":dot.classList.contains("force")?"force":null;
-        if(!type) return;
-        dot.classList.toggle("selected");
-        skills[skill].dice[type]=dot.classList.contains("selected")?1:0;
-        updateDiceRollerFromSkills();
-        saveCharacter();
-      }
-    });
-    skillList.appendChild(div);
+    for(let i=0;i<greenDiceCount;i++){
+      const dot=document.createElement("span");
+      dot.className="dice-dot ability";
+      diceContainer.appendChild(dot);
+    }
+
+    div.querySelector("input").oninput=(e)=>{
+      skills[skill]=parseInt(e.target.value)||0;
+      saveCharacter();
+      renderSkills(skills);
+      updateDiceRollerFromSkills();
+    }
+    list.appendChild(div);
   });
 }
 
+// --- Save character ---
 function saveCharacter(){
   if(selectedIndex===null) return;
   const c=characters[selectedIndex];
@@ -338,43 +334,113 @@ function saveCharacter(){
   c.soak=parseInt(document.getElementById("soak").value)||0;
   c.defense=parseInt(document.getElementById("defense").value)||0;
   c.gear=document.getElementById("gear").value;
-  const stats={};
-  document.querySelectorAll("#stats input").forEach(input=>stats[input.dataset.stat]=parseInt(input.value)||0);
-  c.stats=stats;
+  c.stats={};
+  document.querySelectorAll("#stats input").forEach(inp=>{
+    c.stats[inp.dataset.stat]=parseInt(inp.value)||0;
+  });
+  c.skills={};
+  document.querySelectorAll("#skillList input").forEach(inp=>{
+    c.skills[inp.dataset.skill]=parseInt(inp.value)||0;
+  });
   saveToStorage();
   refreshCharList();
 }
 
-// --- Dice roller helpers ---
+// --- Dice roller ---
 function updateDiceRollerFromSkills(){
   if(selectedIndex===null) return;
   const c=characters[selectedIndex];
-  let ability=0, proficiency=0, boost=0, force=0;
+  // Example: sum all skills to determine ability/proficiency dice for demonstration
+  let abilityTotal=0, proficiencyTotal=0;
   ALL_SKILLS.forEach(skill=>{
-    const s=c.skills?.[skill];
-    if(!s) return;
-    const rank=s.rank||0;
-    const stat=c.stats?.[SKILL_ATTRIBUTES[skill]]||0;
-    if(rank>stat){
-      proficiency+=stat;
-      ability+=rank-stat;
-    }else{
-      ability+=stat;
-      proficiency+=rank;
-    }
-    if(s.dice?.boost) boost+=1;
-    if(s.dice?.force) force+=1;
+    const s=c.skills[skill]||0;
+    const attrVal=c.stats[SKILL_ATTRIBUTES[skill]]||0;
+    const total=Math.max(s,attrVal);
+    const upgrade=Math.min(s,attrVal);
+    abilityTotal+=total-upgrade;
+    proficiencyTotal+=upgrade;
   });
-  document.getElementById("diceAbility").value=ability;
-  document.getElementById("diceProficiency").value=proficiency;
-  document.getElementById("diceBoost").value=boost;
-  document.getElementById("diceForce").value=force;
+  document.getElementById("diceAbility").value=abilityTotal;
+  document.getElementById("diceProficiency").value=proficiencyTotal;
 }
+
+document.getElementById("rollDiceBtn").onclick=()=>{
+  const ability=parseInt(document.getElementById("diceAbility").value)||0;
+  const proficiency=parseInt(document.getElementById("diceProficiency").value)||0;
+  const boost=parseInt(document.getElementById("diceBoost").value)||0;
+  const force=parseInt(document.getElementById("diceForce").value)||0;
+  const container=document.getElementById("diceResult");
+  container.innerHTML="";
+  for(let i=0;i<ability;i++){const s=document.createElement("span");s.className="dice-dot ability";container.appendChild(s);}
+  for(let i=0;i<proficiency;i++){const s=document.createElement("span");s.className="dice-dot proficiency";container.appendChild(s);}
+  for(let i=0;i<boost;i++){const s=document.createElement("span");s.className="dice-dot boost";container.appendChild(s);}
+  for(let i=0;i<force;i++){const s=document.createElement("span");s.className="dice-dot force";container.appendChild(s);}
+};
+document.getElementById("clearDiceBtn").onclick=()=>document.getElementById("diceResult").innerHTML="";
+
+// --- Character controls ---
+document.getElementById("newBtn").onclick=()=>{
+  characters.push({name:"New Character",stats:{},skills:{}});
+  selectedIndex=characters.length-1;
+  saveToStorage();
+  openCharacter(selectedIndex);
+};
+document.getElementById("duplicateBtn").onclick=()=>{
+  if(selectedIndex===null) return;
+  characters.push(JSON.parse(JSON.stringify(characters[selectedIndex])));
+  selectedIndex=characters.length-1;
+  saveToStorage();
+  openCharacter(selectedIndex);
+};
+document.getElementById("deleteBtn").onclick=()=>{
+  if(selectedIndex===null) return;
+  if(confirm("Delete this character?")){
+    characters.splice(selectedIndex,1);
+    selectedIndex=null;
+    saveToStorage();
+    refreshCharList();
+    document.getElementById("editorForm").style.display="none";
+  }
+};
+document.getElementById("exportBtn").onclick=()=>{
+  const data=JSON.stringify(characters,null,2);
+  const blob=new Blob([data],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url; a.download="characters.json"; a.click();
+};
+document.getElementById("importBtn").onclick=()=>document.getElementById("importFile").click();
+document.getElementById("importFile").onchange=(e)=>{
+  const file=e.target.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=(ev)=>{characters=JSON.parse(ev.target.result);saveToStorage();refreshCharList();}
+  reader.readAsText(file);
+};
+document.getElementById("saveBtn").onclick=saveCharacter;
+document.getElementById("seedBtn").onclick=()=>{
+  characters.push({name:"Luke Skywalker",species:"Human",career:"Jedi",stats:{Brawn:2,Agility:3,Intellect:3,Cunning:2,Willpower:3,Presence:2},skills:{Lightsaber:3,Perception:2,Negotiation:1}});
+  selectedIndex=characters.length-1;
+  saveToStorage();
+  openCharacter(selectedIndex);
+};
+document.getElementById("clearAllBtn").onclick=()=>{
+  if(confirm("Clear all characters?")){characters=[];selectedIndex=null;saveToStorage();refreshCharList();document.getElementById("editorForm").style.display="none";}
+};
+document.getElementById("printBtn").onclick=()=>{
+  if(selectedIndex===null) return;
+  const c=characters[selectedIndex];
+  document.getElementById("printName").textContent=c.name;
+  const statSec=document.getElementById("sheetStats"); statSec.innerHTML="";
+  for(let stat in c.stats){statSec.innerHTML+=`<div>${stat}: ${c.stats[stat]}</div>`;}
+  const skillSec=document.getElementById("sheetSkills"); skillSec.innerHTML="";
+  for(let skill in c.skills){skillSec.innerHTML+=`<div>${skill}: ${c.skills[skill]}</div>`;}
+  window.print();
+};
 
 // --- Init ---
 loadFromStorage();
 refreshCharList();
-if(characters.length>0) openCharacter(0);
 </script>
 </body>
 </html>
