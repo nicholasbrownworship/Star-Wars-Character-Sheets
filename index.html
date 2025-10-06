@@ -151,9 +151,23 @@ button{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:6p
           <label>Wounds</label>
           <input id="wounds" type="number" min="0" />
         </div>
-        <div style="width:140px"><label>Strain</label><input id="strain" type="number" min="0" /></div>
-        <div style="width:140px"><label>Soak</label><input id="soak" type="number" min="0" /></div>
-        <div style="width:140px"><label>Defense</label><input id="defense" type="number" min="0" /></div>
+        <div style="flex:1">
+          <label>Strain</label>
+          <input id="strain" type="number" min="0" />
+        </div>
+        <div style="flex:1">
+          <label>Soak</label>
+          <input id="soak" type="number" min="0" />
+        </div>
+        <div style="flex:1">
+          <label>Defense</label>
+          <input id="defense" type="number" min="0" />
+        </div>
+      </div>
+
+      <div>
+        <label>Gear / Equipment</label>
+        <input id="gear" type="text" placeholder="Blaster, Lightsaber, Armor..." />
       </div>
 
       <div>
@@ -161,35 +175,27 @@ button{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:6p
         <div class="skills" id="skillList"></div>
       </div>
 
-      <div>
-        <label>Weapons & Gear</label>
-        <textarea id="gear" rows="3" placeholder="Blaster pistol, Vibroknife, Armor, Grenades..."></textarea>
-      </div>
-
       <div class="dice-roller">
-        <div class="meta">Dice Roller</div>
+        <label>Dice Roller</label>
         <div class="dice-controls">
-          <label>Ability <input type="number" id="diceAbility" value="0" min="0"></label>
-          <label>Proficiency <input type="number" id="diceProficiency" value="0" min="0"></label>
-          <label>Difficulty <input type="number" id="diceDifficulty" value="0" min="0"></label>
-          <label>Challenge <input type="number" id="diceChallenge" value="0" min="0"></label>
-          <label>Boost <input type="number" id="diceBoost" value="0" min="0"></label>
-          <label>Setback <input type="number" id="diceSetback" value="0" min="0"></label>
-          <label>Force <input type="number" id="diceForce" value="0" min="0"></label>
+          <label>Ability <input type="number" min="0" id="diceAbility"></label>
+          <label>Proficiency <input type="number" min="0" id="diceProficiency"></label>
+          <label>Boost <input type="number" min="0" id="diceBoost"></label>
+          <label>Force <input type="number" min="0" id="diceForce"></label>
         </div>
-        <div class="dice-result" id="diceResult"></div>
         <div style="margin-top:6px">
-          <button id="rollDiceBtn">Roll Dice</button>
+          <button id="rollDiceBtn">Roll</button>
           <button id="clearDiceBtn">Clear</button>
         </div>
+        <div class="dice-result" id="diceResult"></div>
       </div>
     </div>
   </main>
 </div>
 
-<div class="print-sheet" id="printSheet">
+<div class="print-sheet">
   <div class="sheet-header">
-    <h2 id="printName">Character Name</h2>
+    <h2 id="printName"></h2>
   </div>
   <div class="sheet-grid">
     <div class="sheet-section" id="sheetStats"></div>
@@ -198,45 +204,44 @@ button{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:6p
 </div>
 
 <script>
-// ---------------- All JS functionality ----------------
-let characters=[], selectedIndex=null;
-const ALL_SKILLS = ["Astrogation","Brawl","Charm","Coercion","Computers","Cool","Coordination","Deception","Discipline","Gunnery","Knowledge (Core Worlds)","Knowledge (Education)","Knowledge (Lore)","Knowledge (Outer Rim)","Knowledge (Underworld)","Leadership","Mechanics","Medicine","Melee","Negotiation","Perception","Piloting (Planetary)","Piloting (Space)","Ranged (Light)","Ranged (Heavy)","Resilience","Skulduggery","Stealth","Streetwise","Survival","Vigilance","X"];
-const diceFaces = {
-  ability:["green_blank.jpg","green_success.jpg","green_success.jpg","green_success_success.jpg","green_success_adv.jpg","green_advantage.jpg","green_advantage.jpg","green_advantage_advantage.jpg"],
-  proficiency:["yellow_advantage.jpg","yellow_advantage_adv.jpg","yellow_advantage_adv.jpg","yellow_blank.jpg","yellow_success.jpg","yellow_success.jpg","yellow_success_adv.jpg","yellow_success_adv.jpg","yellow_success_adv.jpg","yellow_success_success.jpg","yellow_success_success.jpg","yellow_triumph.jpg"],
-  difficulty:["purple_blank.jpg","purple_failure.jpg","purple_failure_failure.jpg","purple_failure_threat.jpg","purple_threat.jpg","purple_threat.jpg","purple_threat.jpg","purple_threat_threat.jpg"],
-  challenge:["red_blank.jpg","red_despair.jpg","red_failure.jpg","red_failure.jpg","red_failure_failure.jpg","red_failure_failure.jpg","red_failure_threat.jpg","red_failure_threat.jpg","red_threat.jpg","red_threat.jpg","red_threat_threat.jpg","red_threat_threat.jpg"],
-  boost:["blue_blank.jpg","blue_blank.jpg","blue_advantage.jpg","blue_advantage_adv.jpg","blue_success.jpg","blue_success_adv.jpg"],
-  setback:["black_blank.jpg","black_blank.jpg","black_failure.jpg","black_failure.jpg","black_threat.jpg","black_threat.jpg"],
-  force:["white_dark.jpg","white_dark.jpg","white_dark.jpg","white_dark.jpg","white_dark.jpg","white_dark.jpg","white_light.jpg","white_light.jpg","white_light_light.jpg","white_light_light.jpg","white_light_light.jpg","white_dark_dark.jpg"]
+const ALL_SKILLS=[
+"Astrogation","Athletics","Brawl","Computers","Coordination","Cool","Deception","Discipline",
+"Leadership","Mechanics","Medicine","Negotiation","Perception","Piloting (Planetary)","Piloting (Space)",
+"Resilience","Skulduggery","Stealth","Streetwise","Survival","Vigilance","Lightsaber"
+];
+
+let characters=[],selectedIndex=null;
+
+const diceFaces={
+ability:["green_blank.jpg","green_success.jpg","green_success_success.jpg","green_success_adv.jpg","green_advantage.jpg","green_advantage_advantage.jpg"],
+proficiency:["yellow_blank.jpg","yellow_success.jpg","yellow_success_adv.jpg","yellow_success_adv.jpg","yellow_success_success.jpg","yellow_success_success.jpg","yellow_advantage.jpg","yellow_advantage_adv.jpg","yellow_triumph.jpg"],
+difficulty:["purple_blank.jpg","purple_failure.jpg","purple_failure_failure.jpg","purple_failure_threat.jpg","purple_threat.jpg","purple_threat.jpg","purple_threat_threat.jpg"],
+challenge:["red_blank.jpg","red_despair.jpg","red_failure.jpg","red_failure.jpg","red_failure_failure.jpg","red_failure_failure.jpg","red_failure_threat.jpg","red_failure_threat.jpg","red_threat.jpg","red_threat.jpg","red_threat_threat.jpg","red_threat_threat.jpg"],
+boost:["blue_blank.jpg","blue_blank.jpg","blue_success.jpg","blue_success_adv.jpg","blue_advantage.jpg","blue_advantage_adv.jpg"],
+setback:["black_blank.jpg","black_blank.jpg","black_failure.jpg","black_failure.jpg","black_threat.jpg","black_threat.jpg"],
+force:["white_dark.jpg","white_dark.jpg","white_dark.jpg","white_dark.jpg","white_dark.jpg","white_dark.jpg","white_light.jpg","white_light.jpg","white_light_light.jpg","white_light_light.jpg","white_light_light.jpg","white_dark_dark.jpg"]
 };
 
-// --- Persistence ---
-function saveToStorage(){ localStorage.setItem("ffgCharacters",JSON.stringify(characters)); }
-function loadFromStorage(){ 
-  const data = localStorage.getItem("ffgCharacters");
-  if(data){ try{ characters=JSON.parse(data); if(characters.length>0){ openCharacter(0); } } catch(err){console.warn("Could not load characters:",err);} }
-}
-
-// --- Character management ---
-const charList=document.getElementById("charList");
-const editorForm=document.getElementById("editorForm");
-
+// --- Storage ---
+function saveToStorage(){localStorage.setItem("ffgChars",JSON.stringify(characters))}
+function loadFromStorage(){const d=localStorage.getItem("ffgChars"); if(d) characters=JSON.parse(d)}
 function refreshCharList(){
-  charList.innerHTML="";
+  const list=document.getElementById("charList");
+  list.innerHTML="";
   characters.forEach((c,i)=>{
     const div=document.createElement("div");
     div.className="char-item"+(i===selectedIndex?" active":"");
     div.textContent=c.name;
     div.onclick=()=>openCharacter(i);
-    charList.appendChild(div);
+    list.appendChild(div);
   });
 }
 
-function openCharacter(idx){
-  selectedIndex=idx;
-  const c=characters[idx];
-  editorForm.style.display="block";
+// --- Open character ---
+function openCharacter(index){
+  selectedIndex=index;
+  const c=characters[index];
+  document.getElementById("editorForm").style.display="block";
   document.getElementById("charNameDisplay").textContent=c.name;
   document.getElementById("name").value=c.name||"";
   document.getElementById("species").value=c.species||"";
@@ -247,16 +252,16 @@ function openCharacter(idx){
   document.getElementById("soak").value=c.soak||0;
   document.getElementById("defense").value=c.defense||0;
   document.getElementById("gear").value=c.gear||"";
-  document.getElementById("xp").textContent=c.xp||0;
   renderStats(c.stats);
   renderSkills(c.skills);
   updateDiceRollerFromSkills();
   refreshCharList();
 }
 
+// --- Save character ---
 function saveCharacter(){
   if(selectedIndex===null) return;
-  const c = characters[selectedIndex];
+  const c=characters[selectedIndex];
   c.name=document.getElementById("name").value;
   c.species=document.getElementById("species").value;
   c.career=document.getElementById("career").value;
@@ -295,8 +300,9 @@ function renderSkills(skills){
   const skillList=document.getElementById("skillList");
   skillList.innerHTML="";
   ALL_SKILLS.forEach(skill=>{
-    const rank = (skills[skill]?.rank)||0;
-    const diceState = skills[skill]?.dice||{};
+    if(!skills[skill]) skills[skill]={rank:0,dice:{}};
+    const rank = skills[skill].rank||0;
+    const diceState = skills[skill].dice||{};
     const div=document.createElement("div");
     div.className="skill";
     div.innerHTML=`
@@ -310,13 +316,11 @@ function renderSkills(skills){
       </div>
     `;
     div.querySelector("input").oninput=(e)=>{
-      if(!skills[skill]) skills[skill]={rank:0,dice:{}};
       skills[skill].rank=parseInt(e.target.value)||0;
       saveCharacter();
     }
     div.querySelectorAll(".dice-dot").forEach(dot=>{
       dot.onclick=()=>{
-        if(!skills[skill]) skills[skill]={rank:0,dice:{}};
         const type=dot.classList[1];
         dot.classList.toggle("selected");
         skills[skill].dice[type]=dot.classList.contains("selected")?1:0;
@@ -342,7 +346,7 @@ function readSkills(){
   return skills;
 }
 
-// --- Dice roller ---
+// --- Dice Roller ---
 function updateDiceRollerFromSkills(){
   if(selectedIndex===null) return;
   const skills = characters[selectedIndex].skills||{};
@@ -389,7 +393,7 @@ document.getElementById("deleteBtn").onclick=()=>{
   if(selectedIndex===null) return;
   characters.splice(selectedIndex,1);
   selectedIndex=null;
-  editorForm.style.display="none";
+  document.getElementById("editorForm").style.display="none";
   document.getElementById("charNameDisplay").textContent="— select a character —";
   refreshCharList();
   saveToStorage();
@@ -410,7 +414,7 @@ document.getElementById("importFile").onchange=function(e){
     try{
       characters=JSON.parse(evt.target.result);
       selectedIndex=null;
-      editorForm.style.display="none";
+      document.getElementById("editorForm").style.display="none";
       refreshCharList();
       saveToStorage();
     }catch(err){alert("Invalid JSON")}
@@ -418,12 +422,20 @@ document.getElementById("importFile").onchange=function(e){
   reader.readAsText(file);
 };
 document.getElementById("seedBtn").onclick=()=>{
-  characters=[{name:"Luke Skywalker",species:"Human",career:"Jedi",stats:{Brawn:2,Agility:3,Intellect:3,Cunning:2,Willpower:3,Presence:2},skills:{"Lightsaber":{rank:3,dice:{ability:1,proficiency:1,boost:0,force:1}},"Piloting (Space)":{rank:2,dice:{ability:1,proficiency:0,boost:0,force:0}}},gear:"Lightsaber, X-Wing",xp:10,wounds:0,strain:0,soak:1,defense:1}];
+  characters=[{
+    name:"Luke Skywalker",
+    species:"Human",
+    career:"Jedi",
+    stats:{Brawn:2,Agility:3,Intellect:3,Cunning:2,Willpower:3,Presence:2},
+    skills:{"Lightsaber":{rank:3,dice:{ability:1,proficiency:1,boost:0,force:1}},"Piloting (Space)":{rank:2,dice:{ability:1,proficiency:0,boost:0,force:0}}},
+    gear:"Lightsaber, X-Wing",
+    xp:10,wounds:0,strain:0,soak:1,defense:1
+  }];
   openCharacter(0);
   saveToStorage();
 };
 document.getElementById("clearAllBtn").onclick=()=>{
-  characters=[]; selectedIndex=null; editorForm.style.display="none"; document.getElementById("charNameDisplay").textContent="— select a character —"; refreshCharList();
+  characters=[]; selectedIndex=null; document.getElementById("editorForm").style.display="none"; document.getElementById("charNameDisplay").textContent="— select a character —"; refreshCharList();
   saveToStorage();
 };
 document.getElementById("saveBtn").onclick=saveCharacter;
