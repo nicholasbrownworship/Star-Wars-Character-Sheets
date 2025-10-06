@@ -7,148 +7,64 @@
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
 <style>
 :root{
+  --bg-overlay: rgba(2,6,12,0.55);
+  --panel: rgba(10,18,28,0.72);
   --accent:#44d7ff;
   --muted:#98a0b3;
   --glass: rgba(255,255,255,0.03);
-  --panel-bg: rgba(10,18,28,0.7);
-  --panel-border: rgba(68,215,255,0.12);
   font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
 }
-
 html,body{height:100%;margin:0}
 body{
   background: url('4107909.jpg') no-repeat center center fixed;
   background-size: cover;
   color:#e6eef8;
+  min-height:100vh;
 }
 body::before{
-  content:"";
-  position:fixed; inset:0;
-  background:linear-gradient(180deg, rgba(0,0,0,0.35), rgba(0,0,0,0.6));
+  content:""; position:fixed; inset:0;
+  background:linear-gradient(180deg, rgba(0,0,0,0.45), rgba(0,0,0,0.65));
   z-index:-1;
 }
-
 .app{display:grid;grid-template-columns:320px 1fr;gap:18px;height:100vh;padding:20px;align-items:start}
-
-.panel{
-  background: var(--panel-bg);
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: 0 15px 30px rgba(0,100,160,0.25);
-  border: 1px solid var(--panel-border);
-  backdrop-filter: blur(6px);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-.panel:hover{transform: translateY(-2px); box-shadow: 0 20px 40px rgba(0,100,160,0.3);}
+.panel{background:var(--panel);border-radius:12px;padding:14px;box-shadow:0 10px 40px rgba(3,10,18,0.75);border:1px solid rgba(68,215,255,0.08)}
 aside.panel{height:calc(100vh - 40px);overflow:auto}
 main.panel{height:calc(100vh - 40px);overflow:auto;position:relative}
-
-.datapad{
-  background: linear-gradient(180deg, rgba(6,24,36,0.86), rgba(8,16,28,0.6));
-  border-radius:16px;
-  padding:18px;
-  border:1px solid rgba(68,215,255,0.06);
-  box-shadow:0 6px 30px rgba(0,120,160,0.12);
-}
-
+.datapad{background:linear-gradient(180deg, rgba(6,24,36,0.86), rgba(8,16,28,0.6));border:1px solid rgba(68,215,255,0.06);box-shadow:0 6px 30px rgba(0,120,160,0.12);border-radius:16px;padding:18px}
 header{display:flex;gap:12px;align-items:center}
-header .logo{
-  width:52px; height:52px;
-  border-radius:8px;
-  background: linear-gradient(135deg,var(--accent),#8a6b44);
-  display:flex;align-items:center;justify-content:center;
-  font-weight:700;font-family:'Orbitron',sans-serif;color:#021;
-  box-shadow:0 0 12px rgba(68,215,255,0.4);
-}
-header h1{
-  margin:0;font-size:18px;
-  color: var(--accent);
-  text-shadow:0 0 6px var(--accent),0 0 12px rgba(68,215,255,0.5);
-}
+header .logo{width:52px;height:52px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#8a6b44);display:flex;align-items:center;justify-content:center;font-weight:700;font-family:'Orbitron',sans-serif;color:#021;box-shadow:0 6px 18px rgba(68,215,255,0.06)}
+h1{margin:0;font-size:16px}
 .meta{font-size:12px;color:var(--muted)}
-
 .character-list{margin-top:12px}
-.char-item{
-  display:flex;justify-content:space-between;align-items:center;
-  padding:10px;border-radius:10px;
-  background: rgba(255,255,255,0.05);
-  border-left: 4px solid transparent;
-  margin-bottom:8px; cursor:pointer;
-  transition: all 0.15s ease;
-}
-.char-item:hover{background: rgba(68,215,255,0.05); border-left:4px solid var(--accent);}
-.char-item.active{border-left:4px solid var(--accent); box-shadow:0 0 12px var(--accent);}
-
+.char-item{display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));margin-bottom:8px;cursor:pointer}
+.char-item.active{outline:2px solid rgba(68,215,255,0.08)}
 .editor{display:flex;flex-direction:column;gap:12px}
 .row{display:flex;gap:12px}
 .col{flex:1}
 label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px}
-input[type=text], input[type=number], select, textarea{
-  width:100%; padding:10px;
-  border-radius:12px;
-  border:1px solid rgba(68,215,255,0.1);
-  background: rgba(0,0,0,0.25);
-  color:inherit;
-  transition: all 0.2s ease;
-}
-input:focus, textarea:focus{
-  border-color: var(--accent);
-  box-shadow: 0 0 8px var(--accent);
-  outline: none;
-  background: rgba(0,0,0,0.35);
-}
+input[type=text], input[type=number], select, textarea{width:100%;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:rgba(0,0,0,0.22);color:inherit}
 textarea{resize:vertical}
-
 .stat-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:8px}
-.stat{padding:8px;border-radius:8px;background:rgba(255,255,255,0.02);text-align:center}
+.stat{padding:8px;border-radius:8px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));text-align:center}
 .stat input{width:56px;text-align:center;font-size:16px;background:transparent;border:0;color:inherit}
-
 .skills{display:flex;flex-direction:column;gap:6px;max-height:400px;overflow-y:auto}
 .skill{display:flex;justify-content:space-between;align-items:center;padding:6px;border-radius:8px;background:var(--glass)}
 .skill .skillDice{display:flex;gap:4px}
-
 .dice-dot{width:16px;height:16px;border-radius:50%;display:inline-block;border:1px solid rgba(255,255,255,0.15);vertical-align:middle}
 .dice-dot.ability{background:green}
 .dice-dot.proficiency{background:yellow}
 .dice-dot.boost{background:blue}
 .dice-dot.force{background:white;border:1px solid #ccc}
-
-.dice-roller{margin-top:8px;padding:12px;background:rgba(255,255,255,0.02);border-radius:12px;}
+.dice-roller{margin-top:8px;padding:12px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:8px}
 .dice-controls{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
 .dice-controls label{display:flex;flex-direction:column;align-items:center;font-size:12px}
-.dice-result{
-  background: rgba(0,0,0,0.3);
-  padding:12px;
-  border-radius:12px;
-  min-height:60px;
-  display:flex;
-  flex-wrap:wrap;
-  gap:4px;
-  align-items:center;
-  border:1px solid var(--accent);
-  backdrop-filter: blur(4px);
-}
-
+.dice-result{background:rgba(0,0,0,0.25);padding:10px;border-radius:8px;min-height:48px;display:flex;flex-wrap:wrap;gap:2px;align-items:center}
+.net-result{margin-top:6px;font-weight:600}
+.net-positive{color:#4caf50}
+.net-negative{color:#f44336}
+.net-neutral{color:#fff}
 .actions{display:flex;gap:8px;flex-wrap:wrap}
-button{
-  border: 1px solid rgba(68,215,255,0.3);
-  padding: 8px 14px;
-  border-radius: 12px;
-  background: rgba(0,0,0,0.2);
-  color: var(--accent);
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-button:hover{
-  background: rgba(68,215,255,0.05);
-  box-shadow: 0 0 8px var(--accent);
-}
-
-.net-result{margin-top:6px;font-weight:600;}
-.net-positive{color:#4ade80;} /* green */
-.net-negative{color:#f87171;} /* red */
-.net-neutral{color:#fff;} /* white */
+button{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:6px 10px;border-radius:8px;color:inherit;cursor:pointer}
 </style>
 </head>
 <body>
@@ -242,7 +158,7 @@ button:hover{
 <button id="clearDiceBtn">Clear</button>
 </div>
 <div class="dice-result" id="diceResult"></div>
-<div id="netResult" class="net-result net-neutral"></div>
+<div class="net-result" id="netResult">Successes: 0 | Advantages: 0</div>
 </div>
 </main>
 </div>
@@ -262,12 +178,13 @@ const skillAttributes = {
 "Willpower":["Discipline","Leadership","Vigilance"],
 "Presence":["Cool","Charm"]
 };
+
 let characters=[],selectedIndex=null;
 
 // ================== DICE FACES ==================
 const diceFaces={
 ability:["green_blank.jpg","green_success.jpg","green_success.jpg","green_success_success.jpg","green_success_adv.jpg","green_advantage.jpg","green_advantage.jpg","green_advantage_advantage.jpg"],
-proficiency:["yellow_blank.jpg","yellow_success.jpg","yellow_success.jpg","yellow_success_adv.jpg","yellow_success_adv.jpg","yellow_success_adv.jpg","yellow_success_success.jpg","yellow_success_success.jpg","yellow_advantage.jpg","yellow_advantage.jpg","yellow_advantage.jpg","yellow_triumph.jpg"],
+proficiency:["yellow_blank.jpg","yellow_success.jpg","yellow_success.jpg","yellow_success_adv.jpg","yellow_success_adv.jpg","yellow_success_adv.jpg","yellow_success_success.jpg","yellow_success_success.jpg","yellow_advantage.jpg","yellow_advantage_adv.jpg","yellow_advantage_adv.jpg","yellow_triumph.jpg"],
 difficulty:["purple_blank.jpg","purple_failure.jpg","purple_failure_failure.jpg","purple_failure_threat.jpg","purple_threat.jpg","purple_threat.jpg","purple_threat.jpg","purple_threat_threat.jpg"],
 challenge:["red_blank.jpg","red_despair.jpg","red_failure.jpg","red_failure.jpg","red_failure_failure.jpg","red_failure_failure.jpg","red_failure_threat.jpg","red_failure_threat.jpg","red_threat.jpg","red_threat.jpg","red_threat_threat.jpg","red_threat_threat.jpg"],
 boost:["blue_blank.jpg","blue_blank.jpg","blue_success.jpg","blue_success_adv.jpg","blue_advantage.jpg","blue_advantage_adv.jpg"],
@@ -275,40 +192,114 @@ setback:["black_blank.jpg","black_blank.jpg","black_failure.jpg","black_failure.
 force:["white_dark.jpg","white_dark.jpg","white_dark.jpg","white_dark.jpg","white_dark.jpg","white_dark.jpg","white_light.jpg","white_light.jpg","white_light_light.jpg","white_light_light.jpg","white_light_light.jpg","white_dark_dark.jpg"]
 };
 
-// ================== DICE ROLLER ==================
 function rollDieFace(type){return diceFaces[type][Math.floor(Math.random()*diceFaces[type].length)];}
-function rollDice(){
-  const resultDiv=document.getElementById("diceResult");
-  resultDiv.innerHTML="";
-  let netSuccess=0, netAdv=0;
-  const types=["ability","proficiency","boost","difficulty","challenge","setback","force"];
-  types.forEach(type=>{
-    const n=parseInt(document.getElementById("dice"+type.charAt(0).toUpperCase()+type.slice(1)).value)||0;
-    for(let i=0;i<n;i++){
-      const img=document.createElement("img");
-      img.src="dice/"+rollDieFace(type);
-      img.style.width="36px"; img.style.height="36px"; img.style.margin="2px";
+
+// ================== DICE ROLLER ==================
+function rollDice() {
+  const resultDiv = document.getElementById("diceResult");
+  const netDiv = document.getElementById("netResult");
+  resultDiv.innerHTML = "";
+
+  let netSuccess = 0;
+  let netAdv = 0;
+  let triumphs = 0;
+  let despairs = 0;
+
+  const types = ["ability", "proficiency", "boost", "difficulty", "challenge", "setback", "force"];
+
+  const diceValues = {
+    ability: {
+      "green_blank.jpg": {s:0,a:0,t:0,d:0},
+      "green_success.jpg": {s:1,a:0,t:0,d:0},
+      "green_success_success.jpg": {s:2,a:0,t:0,d:0},
+      "green_success_adv.jpg": {s:1,a:1,t:0,d:0},
+      "green_advantage.jpg": {s:0,a:1,t:0,d:0},
+      "green_advantage_advantage.jpg": {s:0,a:2,t:0,d:0},
+    },
+    proficiency: {
+      "yellow_blank.jpg": {s:0,a:0,t:0,d:0},
+      "yellow_success.jpg": {s:1,a:0,t:0,d:0},
+      "yellow_success_adv.jpg": {s:1,a:1,t:0,d:0},
+      "yellow_success_success.jpg": {s:2,a:0,t:0,d:0},
+      "yellow_success_success_adv.jpg": {s:2,a:1,t:0,d:0},
+      "yellow_advantage.jpg": {s:0,a:1,t:0,d:0},
+      "yellow_advantage_adv.jpg": {s:0,a:2,t:0,d:0},
+      "yellow_triumph.jpg": {s:1,a:0,t:1,d:0} // 1 success + 1 triumph
+    },
+    boost: {
+      "blue_blank.jpg": {s:0,a:0,t:0,d:0},
+      "blue_success.jpg": {s:1,a:0,t:0,d:0},
+      "blue_success_adv.jpg": {s:1,a:1,t:0,d:0},
+      "blue_advantage.jpg": {s:0,a:1,t:0,d:0},
+      "blue_advantage_advantage.jpg": {s:0,a:2,t:0,d:0},
+    },
+    difficulty: {
+      "purple_blank.jpg": {s:0,a:0,t:0,d:0},
+      "purple_failure.jpg": {s:-1,a:0,t:0,d:0},
+      "purple_failure_failure.jpg": {s:-2,a:0,t:0,d:0},
+      "purple_failure_threat.jpg": {s:-1,a:-1,t:0,d:0},
+      "purple_threat.jpg": {s:0,a:-1,t:0,d:0},
+      "purple_threat_threat.jpg": {s:0,a:-2,t:0,d:0},
+    },
+    challenge: {
+      "red_blank.jpg": {s:0,a:0,t:0,d:0},
+      "red_failure.jpg": {s:-1,a:0,t:0,d:0},
+      "red_failure_failure.jpg": {s:-2,a:0,t:0,d:0},
+      "red_failure_threat.jpg": {s:-1,a:-1,t:0,d:0},
+      "red_threat.jpg": {s:0,a:-1,t:0,d:0},
+      "red_threat_threat.jpg": {s:0,a:-2,t:0,d:0},
+      "red_despair.jpg": {s:-1,a:0,t:0,d:1} // 1 failure + 1 despair
+    },
+    setback: {
+      "black_blank.jpg": {s:0,a:0,t:0,d:0},
+      "black_failure.jpg": {s:-1,a:0,t:0,d:0},
+      "black_threat.jpg": {s:0,a:-1,t:0,d:0},
+    },
+    force: {
+      "white_dark.jpg": {s:-1,a:0,t:0,d:0},
+      "white_dark_dark.jpg": {s:-2,a:0,t:0,d:0},
+      "white_light.jpg": {s:1,a:0,t:0,d:0},
+      "white_light_light.jpg": {s:2,a:0,t:0,d:0},
+    }
+  };
+
+  types.forEach(type => {
+    const n = parseInt(document.getElementById("dice" + type.charAt(0).toUpperCase() + type.slice(1)).value) || 0;
+    for (let i = 0; i < n; i++) {
+      const face = rollDieFace(type);
+      const img = document.createElement("img");
+      img.src = "dice/" + face;
+      img.style.width = "36px";
+      img.style.height = "36px";
+      img.style.margin = "2px";
       resultDiv.appendChild(img);
 
-      // NET CALCULATION
-      switch(type){
-        case "ability": netSuccess+=1; break;
-        case "proficiency": netSuccess+=2; break;
-        case "boost": netAdv+=1; break;
-        case "difficulty": netSuccess-=1; break;
-        case "challenge": netSuccess-=2; break;
-        case "setback": netAdv-=1; break;
-        case "force": netSuccess+=1; break;
+      if (diceValues[type][face]) {
+        netSuccess += diceValues[type][face].s;
+        netAdv += diceValues[type][face].a;
+        triumphs += diceValues[type][face].t;
+        despairs += diceValues[type][face].d;
       }
     }
   });
-  const netDiv=document.getElementById("netResult");
-  if(netSuccess>0 || netAdv>0){netDiv.textContent=`Successes: ${netSuccess} | Advantages: ${netAdv}`; netDiv.className="net-result net-positive";}
-  else if(netSuccess<0 || netAdv<0){netDiv.textContent=`Successes: ${netSuccess} | Advantages: ${netAdv}`; netDiv.className="net-result net-negative";}
-  else{netDiv.textContent=`Successes: ${netSuccess} | Advantages: ${netAdv}`; netDiv.className="net-result net-neutral";}
+
+  let text = `Successes: ${netSuccess} | Advantages: ${netAdv}`;
+  if (triumphs > 0) text += ` | Triumphs: ${triumphs}`;
+  if (despairs > 0) text += ` | Despairs: ${despairs}`;
+
+  if (netSuccess > 0 || netAdv > 0 || triumphs > 0) {
+    netDiv.className = "net-result net-positive";
+  } else if (netSuccess < 0 || netAdv < 0 || despairs > 0) {
+    netDiv.className = "net-result net-negative";
+  } else {
+    netDiv.className = "net-result net-neutral";
+  }
+
+  netDiv.textContent = text;
 }
+
 document.getElementById("rollDiceBtn").onclick=rollDice;
-document.getElementById("clearDiceBtn").onclick=()=>{document.getElementById("diceResult").innerHTML=""; document.getElementById("netResult").textContent="";};
+document.getElementById("clearDiceBtn").onclick=()=>{document.getElementById("diceResult").innerHTML=""; document.getElementById("netResult").textContent="Successes: 0 | Advantages: 0";};
 
 // ================== CHARACTER FUNCTIONS ==================
 function saveToStorage(){localStorage.setItem("ffgChars",JSON.stringify(characters))}
