@@ -51,12 +51,11 @@ textarea{resize:vertical}
 .skill{display:flex;justify-content:space-between;align-items:center;padding:6px;border-radius:8px;background:var(--glass)}
 .skill input{width:40px;margin-left:8px}
 .skill .skillDice{min-width:60px;display:flex;gap:4px}
-.dice-dot{display:inline-block;width:14px;height:14px;border-radius:50%;border:1px solid rgba(255,255,255,0.15);cursor:pointer;vertical-align:middle;}
+.dice-dot{display:inline-block;width:14px;height:14px;border-radius:50%;border:1px solid rgba(255,255,255,0.15);vertical-align:middle;}
 .dice-dot.ability{background:green;}
 .dice-dot.proficiency{background:yellow;}
 .dice-dot.boost{background:blue;}
 .dice-dot.force{background:white; border:1px solid #ccc;}
-.dice-dot.selected{box-shadow:0 0 4px #fff;}
 .dice-roller{margin-top:8px;padding:12px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:8px}
 .dice-controls{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 .dice-controls label{display:flex;flex-direction:column;align-items:center;font-size:12px}
@@ -204,31 +203,33 @@ button{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:6p
 </div>
 
 <script>
-// --- Constants ---
+// --- Skills / Attributes ---
 const ALL_SKILLS=[
 "Astrogation","Athletics","Brawl","Computers","Coordination","Cool","Deception","Discipline",
 "Leadership","Mechanics","Medicine","Negotiation","Perception","Piloting (Planetary)","Piloting (Space)",
 "Resilience","Skulduggery","Stealth","Streetwise","Survival","Vigilance","Lightsaber"
 ];
-
 const SKILL_ATTRIBUTES={
-  "Brawl":"Brawn","Athletics":"Brawn","Melee":"Brawn",
-  "Piloting (Planetary)":"Agility","Piloting (Space)":"Agility","Stealth":"Agility","Coordination":"Agility",
-  "Computers":"Intellect","Mechanics":"Intellect","Medicine":"Intellect","Knowledge":"Intellect","Perception":"Intellect",
-  "Deception":"Cunning","Skulduggery":"Cunning","Negotiation":"Cunning","Streetwise":"Cunning","Survival":"Cunning",
-  "Willpower":"Willpower","Cool":"Willpower","Discipline":"Willpower",
-  "Leadership":"Presence","Vigilance":"Presence","Lightsaber":"Brawn"
+  "Brawn":["Athletics","Brawl","Resilience"],
+  "Agility":["Skulduggery","Stealth","Coordination","Piloting (Planetary)","Piloting (Space)"],
+  "Intellect":["Computers","Mechanics","Medicine","Astrogation","Negotiation"],
+  "Cunning":["Deception","Cool","Streetwise","Survival"],
+  "Willpower":["Discipline","Leadership","Vigilance"],
+  "Presence":["Lightsaber","Charm","Negotiation"]
 };
 
+let characters=[],selectedIndex=null;
+
+// --- Dice faces ---
 const diceFaces={
 ability:["dice/green_blank.jpg","dice/green_success.jpg","dice/green_success_success.jpg","dice/green_success_adv.jpg","dice/green_advantage.jpg","dice/green_advantage_advantage.jpg"],
 proficiency:["dice/yellow_blank.jpg","dice/yellow_success.jpg","dice/yellow_success_adv.jpg","dice/yellow_success_adv.jpg","dice/yellow_success_success.jpg","dice/yellow_success_success.jpg","dice/yellow_advantage.jpg","dice/yellow_advantage.jpg","dice/yellow_triumph.jpg"],
-boost:["dice/blue_blank.jpg","dice/blue_blank.jpg","dice/blue_success.jpg","dice/blue_success_adv.jpg","dice/blue_advantage.jpg","dice/blue_advantage_advantage.jpg"],
-force:["dice/white_dark.jpg","dice/white_dark.jpg","dice/white_light.jpg","dice/white_light_light.jpg"]
+boost:["dice/blue_blank.jpg","dice/blue_success.jpg","dice/blue_success_adv.jpg","dice/blue_advantage.jpg","dice/blue_advantage.jpg"],
+force:["dice/white_dark.jpg","dice/white_light.jpg","dice/white_light_light.jpg"]
 };
 
-// --- Characters ---
-let characters=[],selectedIndex=null;
+// Optional dice value table for calculation
+const diceValues={ability:[],proficiency:[],boost:[],force:[]}; // can be expanded later
 
 // --- Storage ---
 function saveToStorage(){localStorage.setItem("ffgChars",JSON.stringify(characters))}
@@ -245,7 +246,7 @@ function refreshCharList(){
   });
 }
 
-// --- Open Character ---
+// --- Open character ---
 function openCharacter(index){
   selectedIndex=index;
   const c=characters[index];
@@ -260,175 +261,198 @@ function openCharacter(index){
   document.getElementById("soak").value=c.soak||0;
   document.getElementById("defense").value=c.defense||0;
   document.getElementById("gear").value=c.gear||"";
-  renderStats(c);
-  renderSkills(c);
+  renderStats(c.stats);
+  renderSkills(c.skills);
+  updateDiceRollerFromSkills();
   refreshCharList();
 }
 
-// --- Render Stats ---
-function renderStats(c){
-  const stats=["Brawn","Agility","Intellect","Cunning","Willpower","Presence"];
-  const container=document.getElementById("stats");
-  container.innerHTML="";
-  stats.forEach(s=>{
+// --- Save character ---
+function saveCharacter(){
+  if(selectedIndex===null) return;
+  const c=characters[selectedIndex];
+  c.name=document.getElementById("name").value;
+  c.species=document.getElementById("species").value;
+  c.career=document.getElementById("career").value;
+  c.notes=document.getElementById("notes").value;
+  c.wounds=parseInt(document.getElementById("wounds").value)||0;
+  c.strain=parseInt(document.getElementById("strain").value)||0;
+  c.soak=parseInt(document.getElementById("soak").value)||0;
+  c.defense=parseInt(document.getElementById("defense").value)||0;
+  c.gear=document.getElementById("gear").value;
+  c.stats=readStats();
+  c.skills=readSkills();
+  refreshCharList();
+  saveToStorage();
+}
+
+// --- Stats ---
+function renderStats(stats){
+  const statGrid=document.getElementById("stats");
+  statGrid.innerHTML="";
+  ["Brawn","Agility","Intellect","Cunning","Willpower","Presence"].forEach(s=>{
     const div=document.createElement("div");
     div.className="stat";
-    div.innerHTML=`<div>${s}</div><input type="number" value="${c[s]||0}" min="0" data-stat="${s}">`;
-    container.appendChild(div);
-  });
-  container.querySelectorAll("input").forEach(input=>{
-    input.oninput=()=>{c[input.dataset.stat]=parseInt(input.value)||0; saveToStorage();}
+    div.innerHTML=`<div>${s}</div><input type="number" min="0" value="${stats?.[s]||0}" data-stat="${s}" />`;
+    statGrid.appendChild(div);
   });
 }
+function readStats(){
+  const inputs=document.querySelectorAll("#stats input");
+  const s={};
+  inputs.forEach(i=>s[i.dataset.stat]=parseInt(i.value)||0);
+  return s;
+}
 
-// --- Render Skills ---
-function renderSkills(c){
-  const container=document.getElementById("skillList");
-  container.innerHTML="";
+// --- Skills ---
+function renderSkills(skills){
+  const skillList=document.getElementById("skillList");
+  skillList.innerHTML="";
   ALL_SKILLS.forEach(skill=>{
-    const skillDiv=document.createElement("div");
-    skillDiv.className="skill";
-    const attr=SKILL_ATTRIBUTES[skill]||"";
-    const attrVal=c[attr]||0;
-    const skillVal=c[skill]||0;
-
-    const left=document.createElement("span");
-    left.textContent=skill;
-
-    const right=document.createElement("span");
-    right.className="skillDice";
-
-    const skillInput=document.createElement("input");
-    skillInput.type="number";
-    skillInput.min=0;
-    skillInput.value=skillVal;
-    skillInput.dataset.skill=skill;
-    skillInput.oninput=()=>{
-      c[skill]=parseInt(skillInput.value)||0;
-      renderSkills(c);
-      saveToStorage();
-    };
-
-    // --- Dice logic ---
-    const totalDice=Math.max(attrVal,skillVal);
-    const proficiencyUpgrades=Math.min(attrVal,skillVal);
-
-    for(let i=0;i<totalDice;i++){
-      const dot=document.createElement("span");
-      if(i<proficiencyUpgrades){
-        dot.className="dice-dot proficiency";
-      }else{
-        dot.className="dice-dot ability";
-      }
-      right.appendChild(dot);
+    if(!skills[skill]) skills[skill]={rank:0,dice:{}};
+    const rank = skills[skill].rank||0;
+    const div=document.createElement("div");
+    div.className="skill";
+    const attribute=getSkillAttribute(skill);
+    const attributeValue=characters[selectedIndex].stats[attribute]||0;
+    div.innerHTML=`
+      <span>${skill}</span>
+      <input type="number" min="0" value="${rank}" data-skill="${skill}">
+      <div class="skillDice"></div>
+    `;
+    const diceDiv=div.querySelector(".skillDice");
+    const maxDice=Math.max(rank,attributeValue);
+    let numAbility=maxDice;
+    let numProficiency=0;
+    if(rank>0){
+      numProficiency=Math.min(rank,attributeValue);
+      numAbility=maxDice-numProficiency;
     }
-
-    skillDiv.appendChild(left);
-    skillDiv.appendChild(right);
-    skillDiv.appendChild(skillInput);
-    container.appendChild(skillDiv);
+    for(let i=0;i<numAbility;i++){
+      const d=document.createElement("span"); d.className="dice-dot ability"; diceDiv.appendChild(d);
+    }
+    for(let i=0;i<numProficiency;i++){
+      const d=document.createElement("span"); d.className="dice-dot proficiency"; diceDiv.appendChild(d);
+    }
+    div.querySelector("input").oninput=(e)=>{
+      skills[skill].rank=parseInt(e.target.value)||0;
+      saveCharacter();
+    }
+    skillList.appendChild(div);
   });
 }
+function readSkills(){
+  const skills={};
+  document.querySelectorAll("#skillList .skill").forEach(div=>{
+    const skill=div.querySelector("input").dataset.skill;
+    const rank=parseInt(div.querySelector("input").value)||0;
+    skills[skill]={rank:rank};
+  });
+  return skills;
+}
 
-<script>
-// --- Dice Roller with Results ---
+function getSkillAttribute(skill){
+  for(const attr in SKILL_ATTRIBUTES){
+    if(SKILL_ATTRIBUTES[attr].includes(skill)) return attr;
+  }
+  return "Brawn";
+}
 
-// Define FFG dice faces mapping for calculation
-const diceValues = {
-  ability: [
-    {success:0, advantage:0},   // blank
-    {success:1, advantage:0},   // success
-    {success:2, advantage:0},   // success success
-    {success:1, advantage:1},   // success+advantage
-    {success:0, advantage:1},   // advantage
-    {success:0, advantage:2}    // advantage advantage
-  ],
-  proficiency: [
-    {success:0, advantage:0, triumph:0}, // blank
-    {success:1, advantage:0, triumph:0}, // success
-    {success:1, advantage:1, triumph:0}, // success+adv
-    {success:2, advantage:0, triumph:0}, // success success
-    {success:2, advantage:0, triumph:0}, // success success duplicate
-    {success:0, advantage:2, triumph:0}, // adv adv
-    {success:0, advantage:1, triumph:0}, // adv
-    {success:1, advantage:1, triumph:0}, // success+adv duplicate
-    {success:1, advantage:0, triumph:1}  // triumph
-  ],
-  boost: [
-    {success:0, advantage:0},  // blank
-    {success:0, advantage:0},  // blank
-    {success:1, advantage:0},  // success
-    {success:1, advantage:1},  // success+adv
-    {success:0, advantage:1},  // adv
-    {success:0, advantage:2}   // adv adv
-  ],
-  force: [
-    {dark:1, light:0},  // dark
-    {dark:1, light:0},  // dark
-    {dark:0, light:1},  // light
-    {dark:0, light:2}   // light light
-  ]
-};
-
-document.getElementById("rollDiceBtn").onclick = () => {
-    const ability = parseInt(document.getElementById("diceAbility").value) || 0;
-    const proficiency = parseInt(document.getElementById("diceProficiency").value) || 0;
-    const boost = parseInt(document.getElementById("diceBoost").value) || 0;
-    const force = parseInt(document.getElementById("diceForce").value) || 0;
-    const container = document.getElementById("diceResult");
-    container.innerHTML = "";
-
-    // Totals
-    const totals = {success:0, advantage:0, triumph:0, dark:0, light:0};
-
-    function rollDice(diceArray, diceValueArray, count) {
-        for (let i = 0; i < count; i++) {
-            const img = document.createElement("img");
-            const faceIndex = Math.floor(Math.random() * diceArray.length);
-            img.src = diceArray[faceIndex];
-            img.style.width = "24px";
-            img.style.height = "24px";
-            img.style.marginRight = "2px";
-            container.appendChild(img);
-
-            // Add values
-            const val = diceValueArray[faceIndex];
-            if(val.success) totals.success += val.success;
-            if(val.advantage) totals.advantage += val.advantage;
-            if(val.triumph) totals.triumph += val.triumph;
-            if(val.dark) totals.dark += val.dark;
-            if(val.light) totals.light += val.light;
-        }
+// --- Dice Roller ---
+function updateDiceRollerFromSkills(){
+  if(selectedIndex===null) return;
+  const skills = characters[selectedIndex].skills||{};
+  ["Ability","Proficiency","Boost","Force"].forEach(type=>document.getElementById("dice"+type).value=0);
+  for(const skill in skills){
+    // Currently, we only increment green dice as placeholder
+    if(skills[skill].rank>0) document.getElementById("diceAbility").value++;
+  }
+}
+function rollDieFace(type){return diceFaces[type][Math.floor(Math.random()*diceFaces[type].length)];}
+document.getElementById("rollDiceBtn").onclick=()=>{
+  const resultContainer=document.getElementById("diceResult");
+  resultContainer.innerHTML="";
+  ["Ability","Proficiency","Boost","Force"].forEach(type=>{
+    const n=parseInt(document.getElementById("dice"+type).value)||0;
+    for(let i=0;i<n;i++){
+      const img=document.createElement("img");
+      img.src=rollDieFace(type.toLowerCase());
+      img.style.width="36px"; img.style.height="36px"; img.style.margin="2px";
+      resultContainer.appendChild(img);
     }
+  });
+};
+document.getElementById("clearDiceBtn").onclick=()=>document.getElementById("diceResult").innerHTML="";
 
-    rollDice(diceFaces.ability, diceValues.ability, ability);
-    rollDice(diceFaces.proficiency, diceValues.proficiency, proficiency);
-    rollDice(diceFaces.boost, diceValues.boost, boost);
-    rollDice(diceFaces.force, diceValues.force, force);
-
-    // Show totals
-    const resultDiv = document.createElement("div");
-    resultDiv.style.marginTop = "8px";
-    resultDiv.innerHTML = `
-      <strong>Results:</strong> 
-      Success: ${totals.success}, 
-      Advantage: ${totals.advantage}, 
-      Triumph: ${totals.triumph}, 
-      Light: ${totals.light}, 
-      Dark: ${totals.dark}
-    `;
-    container.appendChild(resultDiv);
+// --- Menu buttons ---
+document.getElementById("newBtn").onclick=()=>{
+  characters.push({name:"New Character",stats:{Brawn:0,Agility:0,Intellect:0,Cunning:0,Willpower:0,Presence:0},skills:{},xp:0,wounds:0,strain:0,soak:0,defense:0,gear:""});
+  selectedIndex=characters.length-1;
+  openCharacter(selectedIndex);
+  saveToStorage();
+};
+document.getElementById("duplicateBtn").onclick=()=>{
+  if(selectedIndex===null) return;
+  characters.push(JSON.parse(JSON.stringify(characters[selectedIndex])));
+  selectedIndex=characters.length-1;
+  openCharacter(selectedIndex);
+  saveToStorage();
+};
+document.getElementById("deleteBtn").onclick=()=>{
+  if(selectedIndex===null) return;
+  characters.splice(selectedIndex,1);
+  selectedIndex=null;
+  document.getElementById("editorForm").style.display="none";
+  document.getElementById("charNameDisplay").textContent="— select a character —";
+  refreshCharList();
+  saveToStorage();
+};
+document.getElementById("exportBtn").onclick=()=>{
+  const dataStr = JSON.stringify(characters,null,2);
+  const blob = new Blob([dataStr],{type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href=url; a.download="ffg_characters.json"; a.click();
+  URL.revokeObjectURL(url);
+};
+document.getElementById("importBtn").onclick=()=>document.getElementById("importFile").click();
+document.getElementById("importFile").onchange=function(e){
+  const file=this.files[0]; const reader=new FileReader();
+  reader.onload=function(evt){characters=JSON.parse(evt.target.result);selectedIndex=null;refreshCharList();saveToStorage();}
+  reader.readAsText(file);
+};
+document.getElementById("saveBtn").onclick=saveCharacter;
+document.getElementById("seedBtn").onclick=()=>{
+  characters=[{
+    name:"Luke Skywalker",
+    species:"Human",
+    career:"Jedi",
+    notes:"Hero of the Rebellion",
+    stats:{Brawn:2,Agility:3,Intellect:3,Cunning:2,Willpower:3,Presence:2},
+    skills:{"Lightsaber":{rank:3},"Perception":{rank:2},"Piloting (Space)":{rank:2},"Negotiation":{rank:1}},
+    wounds:10,strain:5,soak:2,defense:1,gear:"Lightsaber, X-wing"},
+  }];
+  selectedIndex=0;
+  openCharacter(0);
+  saveToStorage();
+};
+document.getElementById("clearAllBtn").onclick=()=>{
+  if(confirm("Clear all characters?")){characters=[];selectedIndex=null;refreshCharList();document.getElementById("editorForm").style.display="none";saveToStorage();}
+};
+document.getElementById("printBtn").onclick=()=>{
+  if(selectedIndex===null) return;
+  document.getElementById("printName").textContent=characters[selectedIndex].name;
+  let statsHTML="",skillsHTML="";
+  const c=characters[selectedIndex];
+  for(const stat in c.stats) statsHTML+=`<div>${stat}: ${c.stats[stat]}</div>`;
+  for(const skill in c.skills) skillsHTML+=`<div>${skill}: ${c.skills[skill].rank}</div>`;
+  document.getElementById("sheetStats").innerHTML=statsHTML;
+  document.getElementById("sheetSkills").innerHTML=skillsHTML;
+  window.print();
 };
 
-document.getElementById("clearDiceBtn").onclick = () => {
-    document.getElementById("diceResult").innerHTML = "";
-};
-</script>
-
-
-// --- Load ---
-loadFromStorage();
-refreshCharList();
+// --- Init ---
+loadFromStorage(); refreshCharList();
 </script>
 </body>
 </html>
