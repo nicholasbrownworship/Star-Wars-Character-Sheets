@@ -204,6 +204,7 @@ button{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:6p
 </div>
 
 <script>
+// --- Constants ---
 const ALL_SKILLS=[
 "Astrogation","Athletics","Brawl","Computers","Coordination","Cool","Deception","Discipline",
 "Leadership","Mechanics","Medicine","Negotiation","Perception","Piloting (Planetary)","Piloting (Space)",
@@ -211,22 +212,23 @@ const ALL_SKILLS=[
 ];
 
 const SKILL_ATTRIBUTES={
-"Astrogation":"Intellect","Athletics":"Brawn","Brawl":"Brawn","Computers":"Intellect",
-"Coordination":"Agility","Cool":"Willpower","Deception":"Cunning","Discipline":"Willpower",
-"Leadership":"Presence","Mechanics":"Intellect","Medicine":"Intellect","Negotiation":"Presence",
-"Perception":"Cunning","Piloting (Planetary)":"Agility","Piloting (Space)":"Agility",
-"Resilience":"Willpower","Skulduggery":"Cunning","Stealth":"Agility","Streetwise":"Cunning",
-"Survival":"Cunning","Vigilance":"Cunning","Lightsaber":"Brawn"
+  "Brawl":"Brawn","Athletics":"Brawn","Melee":"Brawn",
+  "Piloting (Planetary)":"Agility","Piloting (Space)":"Agility","Stealth":"Agility","Coordination":"Agility",
+  "Computers":"Intellect","Mechanics":"Intellect","Medicine":"Intellect","Knowledge":"Intellect","Perception":"Intellect",
+  "Deception":"Cunning","Skulduggery":"Cunning","Negotiation":"Cunning","Streetwise":"Cunning","Survival":"Cunning",
+  "Willpower":"Willpower","Cool":"Willpower","Discipline":"Willpower",
+  "Leadership":"Presence","Vigilance":"Presence","Lightsaber":"Brawn"
 };
-
-let characters=[],selectedIndex=null;
 
 const diceFaces={
-ability:["green_blank.jpg","green_success.jpg","green_success_success.jpg","green_success_adv.jpg","green_advantage.jpg","green_advantage_advantage.jpg"],
-proficiency:["yellow_blank.jpg","yellow_success.jpg","yellow_success_adv.jpg","yellow_success_adv.jpg","yellow_success_success.jpg","yellow_success_success.jpg","yellow_advantage.jpg","yellow_advantage.jpg","yellow_triumph.jpg"],
-boost:["blue_blank.jpg","blue_blank.jpg","blue_success.jpg","blue_success_adv.jpg","blue_advantage.jpg","blue_advantage_adv.jpg"],
-force:["white_dark.jpg","white_dark.jpg","white_dark.jpg","white_dark.jpg","white_dark.jpg","white_dark.jpg","white_light.jpg","white_light.jpg","white_light_light.jpg","white_light_light.jpg","white_light_light.jpg","white_dark_dark.jpg"]
+ability:["dice/green_blank.jpg","dice/green_success.jpg","dice/green_success_success.jpg","dice/green_success_adv.jpg","dice/green_advantage.jpg","dice/green_advantage_advantage.jpg"],
+proficiency:["dice/yellow_blank.jpg","dice/yellow_success.jpg","dice/yellow_success_adv.jpg","dice/yellow_success_adv.jpg","dice/yellow_success_success.jpg","dice/yellow_success_success.jpg","dice/yellow_advantage.jpg","dice/yellow_advantage.jpg","dice/yellow_triumph.jpg"],
+boost:["dice/blue_blank.jpg","dice/blue_blank.jpg","dice/blue_success.jpg","dice/blue_success_adv.jpg","dice/blue_advantage.jpg","dice/blue_advantage_advantage.jpg"],
+force:["dice/white_dark.jpg","dice/white_dark.jpg","dice/white_light.jpg","dice/white_light_light.jpg"]
 };
+
+// --- Characters ---
+let characters=[],selectedIndex=null;
 
 // --- Storage ---
 function saveToStorage(){localStorage.setItem("ffgChars",JSON.stringify(characters))}
@@ -243,7 +245,7 @@ function refreshCharList(){
   });
 }
 
-// --- Open character ---
+// --- Open Character ---
 function openCharacter(index){
   selectedIndex=index;
   const c=characters[index];
@@ -258,187 +260,173 @@ function openCharacter(index){
   document.getElementById("soak").value=c.soak||0;
   document.getElementById("defense").value=c.defense||0;
   document.getElementById("gear").value=c.gear||"";
-  renderStats(c.stats||{});
-  renderSkills(c.skills||{});
-  updateDiceRollerFromSkills();
+  renderStats(c);
+  renderSkills(c);
   refreshCharList();
 }
 
-// --- Stats ---
-function renderStats(stats){
-  const statGrid=document.getElementById("stats");
-  statGrid.innerHTML="";
-  ["Brawn","Agility","Intellect","Cunning","Willpower","Presence"].forEach(stat=>{
+// --- Render Stats ---
+function renderStats(c){
+  const stats=["Brawn","Agility","Intellect","Cunning","Willpower","Presence"];
+  const container=document.getElementById("stats");
+  container.innerHTML="";
+  stats.forEach(s=>{
     const div=document.createElement("div");
     div.className="stat";
-    div.innerHTML=`<div>${stat}</div><input type="number" min="0" value="${stats[stat]||0}" data-stat="${stat}" />`;
-    div.querySelector("input").oninput=(e)=>{
-      stats[stat]=parseInt(e.target.value)||0;
-      saveCharacter();
-      renderSkills(characters[selectedIndex].skills||{});
-    }
-    statGrid.appendChild(div);
+    div.innerHTML=`<div>${s}</div><input type="number" value="${c[s]||0}" min="0" data-stat="${s}">`;
+    container.appendChild(div);
+  });
+  container.querySelectorAll("input").forEach(input=>{
+    input.oninput=()=>{c[input.dataset.stat]=parseInt(input.value)||0; saveToStorage();}
   });
 }
 
-// --- Skills ---
-function renderSkills(skills){
-  const list=document.getElementById("skillList");
-  list.innerHTML="";
-  ALL_SKILLS.forEach(skill=>{
-    const skillRank=skills[skill]||0;
-    const attribute=SKILL_ATTRIBUTES[skill];
-    const attrValue=(characters[selectedIndex].stats||{})[attribute]||0;
-
-    // FFG Dice Calculation
-    const totalDice=Math.max(skillRank,attrValue);
-    const upgradeCount=Math.min(skillRank,attrValue);
-    const greenDiceCount=totalDice-upgradeCount;
-    const yellowDiceCount=upgradeCount;
-
-    const div=document.createElement("div");
-    div.className="skill";
-    div.innerHTML=`<div>${skill}</div><div class="skillDice"></div><input type="number" min="0" value="${skillRank}" data-skill="${skill}" />`;
-    const diceContainer=div.querySelector(".skillDice");
-    for(let i=0;i<yellowDiceCount;i++){
-      const dot=document.createElement("span");
-      dot.className="dice-dot proficiency";
-      diceContainer.appendChild(dot);
-    }
-    for(let i=0;i<greenDiceCount;i++){
-      const dot=document.createElement("span");
-      dot.className="dice-dot ability";
-      diceContainer.appendChild(dot);
-    }
-
-    div.querySelector("input").oninput=(e)=>{
-      skills[skill]=parseInt(e.target.value)||0;
-      saveCharacter();
-      renderSkills(skills);
-      updateDiceRollerFromSkills();
-    }
-    list.appendChild(div);
-  });
-}
-
-// --- Save character ---
-function saveCharacter(){
-  if(selectedIndex===null) return;
-  const c=characters[selectedIndex];
-  c.name=document.getElementById("name").value;
-  c.species=document.getElementById("species").value;
-  c.career=document.getElementById("career").value;
-  c.notes=document.getElementById("notes").value;
-  c.wounds=parseInt(document.getElementById("wounds").value)||0;
-  c.strain=parseInt(document.getElementById("strain").value)||0;
-  c.soak=parseInt(document.getElementById("soak").value)||0;
-  c.defense=parseInt(document.getElementById("defense").value)||0;
-  c.gear=document.getElementById("gear").value;
-  c.stats={};
-  document.querySelectorAll("#stats input").forEach(inp=>{
-    c.stats[inp.dataset.stat]=parseInt(inp.value)||0;
-  });
-  c.skills={};
-  document.querySelectorAll("#skillList input").forEach(inp=>{
-    c.skills[inp.dataset.skill]=parseInt(inp.value)||0;
-  });
-  saveToStorage();
-  refreshCharList();
-}
-
-// --- Dice roller ---
-function updateDiceRollerFromSkills(){
-  if(selectedIndex===null) return;
-  const c=characters[selectedIndex];
-  // Example: sum all skills to determine ability/proficiency dice for demonstration
-  let abilityTotal=0, proficiencyTotal=0;
-  ALL_SKILLS.forEach(skill=>{
-    const s=c.skills[skill]||0;
-    const attrVal=c.stats[SKILL_ATTRIBUTES[skill]]||0;
-    const total=Math.max(s,attrVal);
-    const upgrade=Math.min(s,attrVal);
-    abilityTotal+=total-upgrade;
-    proficiencyTotal+=upgrade;
-  });
-  document.getElementById("diceAbility").value=abilityTotal;
-  document.getElementById("diceProficiency").value=proficiencyTotal;
-}
-
-document.getElementById("rollDiceBtn").onclick=()=>{
-  const ability=parseInt(document.getElementById("diceAbility").value)||0;
-  const proficiency=parseInt(document.getElementById("diceProficiency").value)||0;
-  const boost=parseInt(document.getElementById("diceBoost").value)||0;
-  const force=parseInt(document.getElementById("diceForce").value)||0;
-  const container=document.getElementById("diceResult");
+// --- Render Skills ---
+function renderSkills(c){
+  const container=document.getElementById("skillList");
   container.innerHTML="";
-  for(let i=0;i<ability;i++){const s=document.createElement("span");s.className="dice-dot ability";container.appendChild(s);}
-  for(let i=0;i<proficiency;i++){const s=document.createElement("span");s.className="dice-dot proficiency";container.appendChild(s);}
-  for(let i=0;i<boost;i++){const s=document.createElement("span");s.className="dice-dot boost";container.appendChild(s);}
-  for(let i=0;i<force;i++){const s=document.createElement("span");s.className="dice-dot force";container.appendChild(s);}
-};
-document.getElementById("clearDiceBtn").onclick=()=>document.getElementById("diceResult").innerHTML="";
+  ALL_SKILLS.forEach(skill=>{
+    const skillDiv=document.createElement("div");
+    skillDiv.className="skill";
+    const attr=SKILL_ATTRIBUTES[skill]||"";
+    const attrVal=c[attr]||0;
+    const skillVal=c[skill]||0;
 
-// --- Character controls ---
-document.getElementById("newBtn").onclick=()=>{
-  characters.push({name:"New Character",stats:{},skills:{}});
-  selectedIndex=characters.length-1;
-  saveToStorage();
-  openCharacter(selectedIndex);
-};
-document.getElementById("duplicateBtn").onclick=()=>{
-  if(selectedIndex===null) return;
-  characters.push(JSON.parse(JSON.stringify(characters[selectedIndex])));
-  selectedIndex=characters.length-1;
-  saveToStorage();
-  openCharacter(selectedIndex);
-};
-document.getElementById("deleteBtn").onclick=()=>{
-  if(selectedIndex===null) return;
-  if(confirm("Delete this character?")){
-    characters.splice(selectedIndex,1);
-    selectedIndex=null;
-    saveToStorage();
-    refreshCharList();
-    document.getElementById("editorForm").style.display="none";
-  }
-};
-document.getElementById("exportBtn").onclick=()=>{
-  const data=JSON.stringify(characters,null,2);
-  const blob=new Blob([data],{type:"application/json"});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement("a");
-  a.href=url; a.download="characters.json"; a.click();
-};
-document.getElementById("importBtn").onclick=()=>document.getElementById("importFile").click();
-document.getElementById("importFile").onchange=(e)=>{
-  const file=e.target.files[0];
-  if(!file) return;
-  const reader=new FileReader();
-  reader.onload=(ev)=>{characters=JSON.parse(ev.target.result);saveToStorage();refreshCharList();}
-  reader.readAsText(file);
-};
-document.getElementById("saveBtn").onclick=saveCharacter;
-document.getElementById("seedBtn").onclick=()=>{
-  characters.push({name:"Luke Skywalker",species:"Human",career:"Jedi",stats:{Brawn:2,Agility:3,Intellect:3,Cunning:2,Willpower:3,Presence:2},skills:{Lightsaber:3,Perception:2,Negotiation:1}});
-  selectedIndex=characters.length-1;
-  saveToStorage();
-  openCharacter(selectedIndex);
-};
-document.getElementById("clearAllBtn").onclick=()=>{
-  if(confirm("Clear all characters?")){characters=[];selectedIndex=null;saveToStorage();refreshCharList();document.getElementById("editorForm").style.display="none";}
-};
-document.getElementById("printBtn").onclick=()=>{
-  if(selectedIndex===null) return;
-  const c=characters[selectedIndex];
-  document.getElementById("printName").textContent=c.name;
-  const statSec=document.getElementById("sheetStats"); statSec.innerHTML="";
-  for(let stat in c.stats){statSec.innerHTML+=`<div>${stat}: ${c.stats[stat]}</div>`;}
-  const skillSec=document.getElementById("sheetSkills"); skillSec.innerHTML="";
-  for(let skill in c.skills){skillSec.innerHTML+=`<div>${skill}: ${c.skills[skill]}</div>`;}
-  window.print();
+    const left=document.createElement("span");
+    left.textContent=skill;
+
+    const right=document.createElement("span");
+    right.className="skillDice";
+
+    const skillInput=document.createElement("input");
+    skillInput.type="number";
+    skillInput.min=0;
+    skillInput.value=skillVal;
+    skillInput.dataset.skill=skill;
+    skillInput.oninput=()=>{
+      c[skill]=parseInt(skillInput.value)||0;
+      renderSkills(c);
+      saveToStorage();
+    };
+
+    // --- Dice logic ---
+    const totalDice=Math.max(attrVal,skillVal);
+    const proficiencyUpgrades=Math.min(attrVal,skillVal);
+
+    for(let i=0;i<totalDice;i++){
+      const dot=document.createElement("span");
+      if(i<proficiencyUpgrades){
+        dot.className="dice-dot proficiency";
+      }else{
+        dot.className="dice-dot ability";
+      }
+      right.appendChild(dot);
+    }
+
+    skillDiv.appendChild(left);
+    skillDiv.appendChild(right);
+    skillDiv.appendChild(skillInput);
+    container.appendChild(skillDiv);
+  });
+}
+
+<script>
+// --- Dice Roller with Results ---
+
+// Define FFG dice faces mapping for calculation
+const diceValues = {
+  ability: [
+    {success:0, advantage:0},   // blank
+    {success:1, advantage:0},   // success
+    {success:2, advantage:0},   // success success
+    {success:1, advantage:1},   // success+advantage
+    {success:0, advantage:1},   // advantage
+    {success:0, advantage:2}    // advantage advantage
+  ],
+  proficiency: [
+    {success:0, advantage:0, triumph:0}, // blank
+    {success:1, advantage:0, triumph:0}, // success
+    {success:1, advantage:1, triumph:0}, // success+adv
+    {success:2, advantage:0, triumph:0}, // success success
+    {success:2, advantage:0, triumph:0}, // success success duplicate
+    {success:0, advantage:2, triumph:0}, // adv adv
+    {success:0, advantage:1, triumph:0}, // adv
+    {success:1, advantage:1, triumph:0}, // success+adv duplicate
+    {success:1, advantage:0, triumph:1}  // triumph
+  ],
+  boost: [
+    {success:0, advantage:0},  // blank
+    {success:0, advantage:0},  // blank
+    {success:1, advantage:0},  // success
+    {success:1, advantage:1},  // success+adv
+    {success:0, advantage:1},  // adv
+    {success:0, advantage:2}   // adv adv
+  ],
+  force: [
+    {dark:1, light:0},  // dark
+    {dark:1, light:0},  // dark
+    {dark:0, light:1},  // light
+    {dark:0, light:2}   // light light
+  ]
 };
 
-// --- Init ---
+document.getElementById("rollDiceBtn").onclick = () => {
+    const ability = parseInt(document.getElementById("diceAbility").value) || 0;
+    const proficiency = parseInt(document.getElementById("diceProficiency").value) || 0;
+    const boost = parseInt(document.getElementById("diceBoost").value) || 0;
+    const force = parseInt(document.getElementById("diceForce").value) || 0;
+    const container = document.getElementById("diceResult");
+    container.innerHTML = "";
+
+    // Totals
+    const totals = {success:0, advantage:0, triumph:0, dark:0, light:0};
+
+    function rollDice(diceArray, diceValueArray, count) {
+        for (let i = 0; i < count; i++) {
+            const img = document.createElement("img");
+            const faceIndex = Math.floor(Math.random() * diceArray.length);
+            img.src = diceArray[faceIndex];
+            img.style.width = "24px";
+            img.style.height = "24px";
+            img.style.marginRight = "2px";
+            container.appendChild(img);
+
+            // Add values
+            const val = diceValueArray[faceIndex];
+            if(val.success) totals.success += val.success;
+            if(val.advantage) totals.advantage += val.advantage;
+            if(val.triumph) totals.triumph += val.triumph;
+            if(val.dark) totals.dark += val.dark;
+            if(val.light) totals.light += val.light;
+        }
+    }
+
+    rollDice(diceFaces.ability, diceValues.ability, ability);
+    rollDice(diceFaces.proficiency, diceValues.proficiency, proficiency);
+    rollDice(diceFaces.boost, diceValues.boost, boost);
+    rollDice(diceFaces.force, diceValues.force, force);
+
+    // Show totals
+    const resultDiv = document.createElement("div");
+    resultDiv.style.marginTop = "8px";
+    resultDiv.innerHTML = `
+      <strong>Results:</strong> 
+      Success: ${totals.success}, 
+      Advantage: ${totals.advantage}, 
+      Triumph: ${totals.triumph}, 
+      Light: ${totals.light}, 
+      Dark: ${totals.dark}
+    `;
+    container.appendChild(resultDiv);
+};
+
+document.getElementById("clearDiceBtn").onclick = () => {
+    document.getElementById("diceResult").innerHTML = "";
+};
+</script>
+
+
+// --- Load ---
 loadFromStorage();
 refreshCharList();
 </script>
