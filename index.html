@@ -304,7 +304,7 @@ function readSkills(){
 }
 
 // --- Dice Roller ---
-function rollDie(faces){return diceFaces[Math.floor(Math.random()*faces.length)]}
+function rollDie(faces){return faces[Math.floor(Math.random()*faces.length)]}
 function rollDice(){
   const resultDiv=document.getElementById("diceResult");
   resultDiv.innerHTML="";
@@ -314,7 +314,7 @@ function rollDice(){
     for(let i=0;i<count;i++){
       const face=rollDie(diceFaces[type]);
       const img=document.createElement("img");
-      img.src=face; img.style.height="38px";
+      img.src= dice/ + face; img.style.height="38px";
       resultDiv.appendChild(img);
 
       if(face.includes("success")) tally.success++;
