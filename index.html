@@ -7,60 +7,144 @@
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg-overlay: rgba(2,6,12,0.55);
-  --panel: rgba(10,18,28,0.72);
   --accent:#44d7ff;
   --muted:#98a0b3;
   --glass: rgba(255,255,255,0.03);
+  --panel-bg: rgba(10,18,28,0.7);
+  --panel-border: rgba(68,215,255,0.12);
   font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
 }
+
 html,body{height:100%;margin:0}
 body{
   background: url('4107909.jpg') no-repeat center center fixed;
   background-size: cover;
   color:#e6eef8;
-  min-height:100vh;
 }
 body::before{
-  content:""; position:fixed; inset:0;
-  background:linear-gradient(180deg, rgba(0,0,0,0.45), rgba(0,0,0,0.65));
+  content:"";
+  position:fixed; inset:0;
+  background:linear-gradient(180deg, rgba(0,0,0,0.35), rgba(0,0,0,0.6));
   z-index:-1;
 }
+
 .app{display:grid;grid-template-columns:320px 1fr;gap:18px;height:100vh;padding:20px;align-items:start}
-.panel{background:var(--panel);border-radius:12px;padding:14px;box-shadow:0 10px 40px rgba(3,10,18,0.75);border:1px solid rgba(68,215,255,0.08)}
+
+.panel{
+  background: var(--panel-bg);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 15px 30px rgba(0,100,160,0.25);
+  border: 1px solid var(--panel-border);
+  backdrop-filter: blur(6px);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.panel:hover{transform: translateY(-2px); box-shadow: 0 20px 40px rgba(0,100,160,0.3);}
 aside.panel{height:calc(100vh - 40px);overflow:auto}
 main.panel{height:calc(100vh - 40px);overflow:auto;position:relative}
-.datapad{background:linear-gradient(180deg, rgba(6,24,36,0.86), rgba(8,16,28,0.6));border:1px solid rgba(68,215,255,0.06);box-shadow:0 6px 30px rgba(0,120,160,0.12);border-radius:16px;padding:18px}
+
+.datapad{
+  background: linear-gradient(180deg, rgba(6,24,36,0.86), rgba(8,16,28,0.6));
+  border-radius:16px;
+  padding:18px;
+  border:1px solid rgba(68,215,255,0.06);
+  box-shadow:0 6px 30px rgba(0,120,160,0.12);
+}
+
 header{display:flex;gap:12px;align-items:center}
-header .logo{width:52px;height:52px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#8a6b44);display:flex;align-items:center;justify-content:center;font-weight:700;font-family:'Orbitron',sans-serif;color:#021;box-shadow:0 6px 18px rgba(68,215,255,0.06)}
-h1{margin:0;font-size:16px}
+header .logo{
+  width:52px; height:52px;
+  border-radius:8px;
+  background: linear-gradient(135deg,var(--accent),#8a6b44);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-family:'Orbitron',sans-serif;color:#021;
+  box-shadow:0 0 12px rgba(68,215,255,0.4);
+}
+header h1{
+  margin:0;font-size:18px;
+  color: var(--accent);
+  text-shadow:0 0 6px var(--accent),0 0 12px rgba(68,215,255,0.5);
+}
 .meta{font-size:12px;color:var(--muted)}
+
 .character-list{margin-top:12px}
-.char-item{display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));margin-bottom:8px;cursor:pointer}
-.char-item.active{outline:2px solid rgba(68,215,255,0.08)}
+.char-item{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:10px;border-radius:10px;
+  background: rgba(255,255,255,0.05);
+  border-left: 4px solid transparent;
+  margin-bottom:8px; cursor:pointer;
+  transition: all 0.15s ease;
+}
+.char-item:hover{background: rgba(68,215,255,0.05); border-left:4px solid var(--accent);}
+.char-item.active{border-left:4px solid var(--accent); box-shadow:0 0 12px var(--accent);}
+
 .editor{display:flex;flex-direction:column;gap:12px}
 .row{display:flex;gap:12px}
 .col{flex:1}
 label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px}
-input[type=text], input[type=number], select, textarea{width:100%;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:rgba(0,0,0,0.22);color:inherit}
+input[type=text], input[type=number], select, textarea{
+  width:100%; padding:10px;
+  border-radius:12px;
+  border:1px solid rgba(68,215,255,0.1);
+  background: rgba(0,0,0,0.25);
+  color:inherit;
+  transition: all 0.2s ease;
+}
+input:focus, textarea:focus{
+  border-color: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+  outline: none;
+  background: rgba(0,0,0,0.35);
+}
 textarea{resize:vertical}
+
 .stat-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:8px}
-.stat{padding:8px;border-radius:8px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));text-align:center}
+.stat{padding:8px;border-radius:8px;background:rgba(255,255,255,0.02);text-align:center}
 .stat input{width:56px;text-align:center;font-size:16px;background:transparent;border:0;color:inherit}
+
 .skills{display:flex;flex-direction:column;gap:6px;max-height:400px;overflow-y:auto}
 .skill{display:flex;justify-content:space-between;align-items:center;padding:6px;border-radius:8px;background:var(--glass)}
 .skill .skillDice{display:flex;gap:4px}
+
 .dice-dot{width:16px;height:16px;border-radius:50%;display:inline-block;border:1px solid rgba(255,255,255,0.15);vertical-align:middle}
 .dice-dot.ability{background:green}
 .dice-dot.proficiency{background:yellow}
 .dice-dot.boost{background:blue}
 .dice-dot.force{background:white;border:1px solid #ccc}
-.dice-roller{margin-top:8px;padding:12px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:8px}
+
+.dice-roller{margin-top:8px;padding:12px;background:rgba(255,255,255,0.02);border-radius:12px;}
 .dice-controls{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
 .dice-controls label{display:flex;flex-direction:column;align-items:center;font-size:12px}
-.dice-result{background:rgba(0,0,0,0.25);padding:10px;border-radius:8px;min-height:48px;display:flex;flex-wrap:wrap;gap:2px;align-items:center}
+.dice-result{
+  background: rgba(0,0,0,0.3);
+  padding:12px;
+  border-radius:12px;
+  min-height:60px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:4px;
+  align-items:center;
+  border:1px solid var(--accent);
+  backdrop-filter: blur(4px);
+}
+
 .actions{display:flex;gap:8px;flex-wrap:wrap}
-button{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:6px 10px;border-radius:8px;color:inherit;cursor:pointer}
+button{
+  border: 1px solid rgba(68,215,255,0.3);
+  padding: 8px 14px;
+  border-radius: 12px;
+  background: rgba(0,0,0,0.2);
+  color: var(--accent);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+button:hover{
+  background: rgba(68,215,255,0.05);
+  box-shadow: 0 0 8px var(--accent);
+}
+
 .net-result{margin-top:6px;font-weight:600;}
 .net-positive{color:#4ade80;} /* green */
 .net-negative{color:#f87171;} /* red */
@@ -158,6 +242,7 @@ button{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:6p
 <button id="clearDiceBtn">Clear</button>
 </div>
 <div class="dice-result" id="diceResult"></div>
+<div id="netResult" class="net-result net-neutral"></div>
 </div>
 </main>
 </div>
@@ -177,13 +262,12 @@ const skillAttributes = {
 "Willpower":["Discipline","Leadership","Vigilance"],
 "Presence":["Cool","Charm"]
 };
-
 let characters=[],selectedIndex=null;
 
 // ================== DICE FACES ==================
 const diceFaces={
 ability:["green_blank.jpg","green_success.jpg","green_success.jpg","green_success_success.jpg","green_success_adv.jpg","green_advantage.jpg","green_advantage.jpg","green_advantage_advantage.jpg"],
-proficiency:["yellow_blank.jpg","yellow_success.jpg","yellow_success.jpg","yellow_success_adv.jpg","yellow_success_adv.jpg","yellow_success_adv.jpg","yellow_success_success.jpg","yellow_success_success.jpg","yellow_advantage.jpg","yellow_advantage_adv.jpg","yellow_advantage_adv.jpg","yellow_triumph.jpg"],
+proficiency:["yellow_blank.jpg","yellow_success.jpg","yellow_success.jpg","yellow_success_adv.jpg","yellow_success_adv.jpg","yellow_success_adv.jpg","yellow_success_success.jpg","yellow_success_success.jpg","yellow_advantage.jpg","yellow_advantage.jpg","yellow_advantage.jpg","yellow_triumph.jpg"],
 difficulty:["purple_blank.jpg","purple_failure.jpg","purple_failure_failure.jpg","purple_failure_threat.jpg","purple_threat.jpg","purple_threat.jpg","purple_threat.jpg","purple_threat_threat.jpg"],
 challenge:["red_blank.jpg","red_despair.jpg","red_failure.jpg","red_failure.jpg","red_failure_failure.jpg","red_failure_failure.jpg","red_failure_threat.jpg","red_failure_threat.jpg","red_threat.jpg","red_threat.jpg","red_threat_threat.jpg","red_threat_threat.jpg"],
 boost:["blue_blank.jpg","blue_blank.jpg","blue_success.jpg","blue_success_adv.jpg","blue_advantage.jpg","blue_advantage_adv.jpg"],
@@ -193,59 +277,38 @@ force:["white_dark.jpg","white_dark.jpg","white_dark.jpg","white_dark.jpg","whit
 
 // ================== DICE ROLLER ==================
 function rollDieFace(type){return diceFaces[type][Math.floor(Math.random()*diceFaces[type].length)];}
-
 function rollDice(){
-  const resultDiv = document.getElementById("diceResult");
-  resultDiv.innerHTML = "";
-
-  const types = ["ability","proficiency","boost","difficulty","challenge","setback","force"];
-  let totals = { success:0, advantage:0, triumph:0, failure:0, threat:0, despair:0, light:0, dark:0 };
-
-  types.forEach(type => {
-    const n = parseInt(document.getElementById("dice" + type.charAt(0).toUpperCase() + type.slice(1)).value) || 0;
-    for(let i=0; i<n; i++){
-      const face = rollDieFace(type);
-      const img = document.createElement("img");
-      img.src = "dice/" + face;
-      img.style.width = "36px"; img.style.height = "36px"; img.style.margin = "2px";
+  const resultDiv=document.getElementById("diceResult");
+  resultDiv.innerHTML="";
+  let netSuccess=0, netAdv=0;
+  const types=["ability","proficiency","boost","difficulty","challenge","setback","force"];
+  types.forEach(type=>{
+    const n=parseInt(document.getElementById("dice"+type.charAt(0).toUpperCase()+type.slice(1)).value)||0;
+    for(let i=0;i<n;i++){
+      const img=document.createElement("img");
+      img.src="dice/"+rollDieFace(type);
+      img.style.width="36px"; img.style.height="36px"; img.style.margin="2px";
       resultDiv.appendChild(img);
 
-      if(face.includes("success")) totals.success++;
-      if(face.includes("advantage")) totals.advantage++;
-      if(face.includes("triumph")) totals.triumph++;
-      if(face.includes("failure")) totals.failure++;
-      if(face.includes("threat")) totals.threat++;
-      if(face.includes("despair")) totals.despair++;
-      if(face.includes("light")) totals.light++;
-      if(face.includes("dark")) totals.dark++;
+      // NET CALCULATION
+      switch(type){
+        case "ability": netSuccess+=1; break;
+        case "proficiency": netSuccess+=2; break;
+        case "boost": netAdv+=1; break;
+        case "difficulty": netSuccess-=1; break;
+        case "challenge": netSuccess-=2; break;
+        case "setback": netAdv-=1; break;
+        case "force": netSuccess+=1; break;
+      }
     }
   });
-
-  // Net calculation
-  const netSuccess = totals.success + totals.triumph - totals.failure - totals.despair;
-  const netAdvantage = totals.advantage - totals.threat;
-
-  const summary = document.createElement("div");
-  summary.style.marginTop = "8px";
-  summary.style.fontSize = "14px";
-  summary.innerHTML = `
-    <strong>Totals:</strong><br>
-    Success: ${totals.success}, Advantage: ${totals.advantage}, Triumph: ${totals.triumph}<br>
-    Failure: ${totals.failure}, Threat: ${totals.threat}, Despair: ${totals.despair}<br>
-    Light: ${totals.light}, Dark: ${totals.dark}
-  `;
-  resultDiv.appendChild(summary);
-
-  // Net result display
-  const netDiv = document.createElement("div");
-  netDiv.className = "net-result " + 
-    (netSuccess > 0 || netAdvantage > 0 ? "net-positive" : (netSuccess < 0 || netAdvantage < 0 ? "net-negative" : "net-neutral"));
-  netDiv.innerHTML = `<strong>Net Result:</strong> Success: ${netSuccess}, Advantage: ${netAdvantage}`;
-  resultDiv.appendChild(netDiv);
+  const netDiv=document.getElementById("netResult");
+  if(netSuccess>0 || netAdv>0){netDiv.textContent=`Successes: ${netSuccess} | Advantages: ${netAdv}`; netDiv.className="net-result net-positive";}
+  else if(netSuccess<0 || netAdv<0){netDiv.textContent=`Successes: ${netSuccess} | Advantages: ${netAdv}`; netDiv.className="net-result net-negative";}
+  else{netDiv.textContent=`Successes: ${netSuccess} | Advantages: ${netAdv}`; netDiv.className="net-result net-neutral";}
 }
-
-document.getElementById("rollDiceBtn").onclick = rollDice;
-document.getElementById("clearDiceBtn").onclick = ()=>{document.getElementById("diceResult").innerHTML="";};
+document.getElementById("rollDiceBtn").onclick=rollDice;
+document.getElementById("clearDiceBtn").onclick=()=>{document.getElementById("diceResult").innerHTML=""; document.getElementById("netResult").textContent="";};
 
 // ================== CHARACTER FUNCTIONS ==================
 function saveToStorage(){localStorage.setItem("ffgChars",JSON.stringify(characters))}
