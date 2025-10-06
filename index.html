@@ -12,7 +12,6 @@
   --accent:#44d7ff;
   --muted:#98a0b3;
   --glass: rgba(255,255,255,0.03);
-  --datapad:#061824;
   font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
 }
 html,body{height:100%;margin:0}
@@ -199,20 +198,27 @@ button{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:6p
 </div>
 
 <script>
-// -------- JS Code: Full integration with persistence, all skills, dice dots --------
+// ---------------- All JS functionality ----------------
 let characters=[], selectedIndex=null;
-
 const ALL_SKILLS = ["Astrogation","Brawl","Charm","Coercion","Computers","Cool","Coordination","Deception","Discipline","Gunnery","Knowledge (Core Worlds)","Knowledge (Education)","Knowledge (Lore)","Knowledge (Outer Rim)","Knowledge (Underworld)","Leadership","Mechanics","Medicine","Melee","Negotiation","Perception","Piloting (Planetary)","Piloting (Space)","Ranged (Light)","Ranged (Heavy)","Resilience","Skulduggery","Stealth","Streetwise","Survival","Vigilance","X"];
-const diceFaces = {ability:["green_blank.jpg","green_succes.jpg","green_succes.jpg","green_success_success.jpg","green_success_adv.jpg","green_advantage.jpg","green_advantage.jpg","green_advantage_advantage.jpg"],proficiency:["yellow_advantage.jpg","yellow_advantage_adv.jpg","yellow_advantage_adv.jpg","yellow_blank.jpg","yellow_success.jpg","yellow_success.jpg","yellow_success_adv.jpg","yellow_success_adv.jpg","yellow_success_adv.jpg","yellow_success_success.jpg","yellow_success_success.jpg","yellow_triumph.jpg"],difficulty:["purple_blank.jpg","purple_failure.jpg","purple_failure_failure.jpg","purple_failure_threat.jpg","purple_threat.jpg","purple_threat.jpg","purple_threat.jpg","purple_threat_threat.jpg"],challenge:["red_blank.jpg","red_despair.jpg","red_failure.jpg","red_failure.jpg","red_failure_failure.jpg","red_failure_failure.jpg","red_failure_threat.jpg","red_failure_threat.jpg","red_threat.jpg","red_threat.jpg","red_threat_threat.jpg","red_threat_threat.jpg"],boost:["blue_blank.jpg","blue_blank.jpg","blue_advantage.jpg","blue_advantage_adv.jpg","blue_success.jpg","blue_success_adv.jpg"],setback:["black_blank.jpg","black_blank.jpg","black_failure.jpg","black_failure.jpg","black_threat.jpg","black_threat.jpg"],force:["white_dark.jpg","white_dark.jpg","white_dark.jpg","white_dark.jpg","white_dark.jpg","white_dark.jpg","white_light.jpg","white_light.jpg","white_light_light.jpg","white_light_light.jpg","white_light_light.jpg","white_dark_dark.jpg"]};
+const diceFaces = {
+  ability:["green_blank.jpg","green_success.jpg","green_success.jpg","green_success_success.jpg","green_success_adv.jpg","green_advantage.jpg","green_advantage.jpg","green_advantage_advantage.jpg"],
+  proficiency:["yellow_advantage.jpg","yellow_advantage_adv.jpg","yellow_advantage_adv.jpg","yellow_blank.jpg","yellow_success.jpg","yellow_success.jpg","yellow_success_adv.jpg","yellow_success_adv.jpg","yellow_success_adv.jpg","yellow_success_success.jpg","yellow_success_success.jpg","yellow_triumph.jpg"],
+  difficulty:["purple_blank.jpg","purple_failure.jpg","purple_failure_failure.jpg","purple_failure_threat.jpg","purple_threat.jpg","purple_threat.jpg","purple_threat.jpg","purple_threat_threat.jpg"],
+  challenge:["red_blank.jpg","red_despair.jpg","red_failure.jpg","red_failure.jpg","red_failure_failure.jpg","red_failure_failure.jpg","red_failure_threat.jpg","red_failure_threat.jpg","red_threat.jpg","red_threat.jpg","red_threat_threat.jpg","red_threat_threat.jpg"],
+  boost:["blue_blank.jpg","blue_blank.jpg","blue_advantage.jpg","blue_advantage_adv.jpg","blue_success.jpg","blue_success_adv.jpg"],
+  setback:["black_blank.jpg","black_blank.jpg","black_failure.jpg","black_failure.jpg","black_threat.jpg","black_threat.jpg"],
+  force:["white_dark.jpg","white_dark.jpg","white_dark.jpg","white_dark.jpg","white_dark.jpg","white_dark.jpg","white_light.jpg","white_light.jpg","white_light_light.jpg","white_light_light.jpg","white_light_light.jpg","white_dark_dark.jpg"]
+};
 
-// ---------------- Local Storage ----------------
+// --- Persistence ---
 function saveToStorage(){ localStorage.setItem("ffgCharacters",JSON.stringify(characters)); }
 function loadFromStorage(){ 
   const data = localStorage.getItem("ffgCharacters");
   if(data){ try{ characters=JSON.parse(data); if(characters.length>0){ openCharacter(0); } } catch(err){console.warn("Could not load characters:",err);} }
 }
 
-// ---------------- Character Management ----------------
+// --- Character management ---
 const charList=document.getElementById("charList");
 const editorForm=document.getElementById("editorForm");
 
@@ -266,7 +272,7 @@ function saveCharacter(){
   saveToStorage();
 }
 
-// ---------------- Stats ----------------
+// --- Stats ---
 function renderStats(stats){
   const statGrid=document.getElementById("stats");
   statGrid.innerHTML="";
@@ -284,7 +290,7 @@ function readStats(){
   return s;
 }
 
-// ---------------- Skills ----------------
+// --- Skills ---
 function renderSkills(skills){
   const skillList=document.getElementById("skillList");
   skillList.innerHTML="";
@@ -321,7 +327,6 @@ function renderSkills(skills){
     skillList.appendChild(div);
   });
 }
-
 function readSkills(){
   const skills={};
   document.querySelectorAll("#skillList .skill").forEach(div=>{
@@ -337,7 +342,7 @@ function readSkills(){
   return skills;
 }
 
-// ---------------- Dice Roller Sync ----------------
+// --- Dice roller ---
 function updateDiceRollerFromSkills(){
   if(selectedIndex===null) return;
   const skills = characters[selectedIndex].skills||{};
@@ -350,8 +355,7 @@ function updateDiceRollerFromSkills(){
     if(dice.force) document.getElementById("diceForce").value++;
   }
 }
-
-function rollDieFace(type){const arr=diceFaces[type];return arr[Math.floor(Math.random()*arr.length)];}
+function rollDieFace(type){return diceFaces[type][Math.floor(Math.random()*diceFaces[type].length)];}
 document.getElementById("rollDiceBtn").onclick=()=>{
   const resultContainer=document.getElementById("diceResult");
   resultContainer.innerHTML="";
@@ -367,7 +371,7 @@ document.getElementById("rollDiceBtn").onclick=()=>{
 };
 document.getElementById("clearDiceBtn").onclick=()=>document.getElementById("diceResult").innerHTML="";
 
-// ---------------- Menu Buttons ----------------
+// --- Menu buttons ---
 document.getElementById("newBtn").onclick=()=>{
   characters.push({name:"New Character",stats:{Brawn:0,Agility:0,Intellect:0,Cunning:0,Willpower:0,Presence:0},skills:{},xp:0,wounds:0,strain:0,soak:0,defense:0,gear:""});
   selectedIndex=characters.length-1;
@@ -424,7 +428,7 @@ document.getElementById("clearAllBtn").onclick=()=>{
 };
 document.getElementById("saveBtn").onclick=saveCharacter;
 
-// ---------------- Print Sheet ----------------
+// --- Print sheet ---
 document.getElementById("printBtn").onclick=()=>{
   if(selectedIndex===null) return;
   const c=characters[selectedIndex];
@@ -434,7 +438,7 @@ document.getElementById("printBtn").onclick=()=>{
   window.print();
 };
 
-// ---------------- Init ----------------
+// --- Init ---
 loadFromStorage();
 refreshCharList();
 </script>
