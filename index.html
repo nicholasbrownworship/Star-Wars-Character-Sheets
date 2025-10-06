@@ -304,7 +304,7 @@ function readSkills(){
 }
 
 // --- Dice Roller ---
-function rollDie(faces){return faces[Math.floor(Math.random()*faces.length)]}
+function rollDie(faces){return diceFaces[Math.floor(Math.random()*faces.length)]}
 function rollDice(){
   const resultDiv=document.getElementById("diceResult");
   resultDiv.innerHTML="";
