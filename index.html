@@ -51,11 +51,12 @@ textarea{resize:vertical}
 .skill{display:flex;justify-content:space-between;align-items:center;padding:6px;border-radius:8px;background:var(--glass)}
 .skill input{width:40px;margin-left:8px}
 .skill .skillDice{min-width:60px;display:flex;gap:4px}
-.dice-dot{display:inline-block;width:14px;height:14px;border-radius:50%;border:1px solid rgba(255,255,255,0.15);vertical-align:middle;}
+.dice-dot{display:inline-block;width:14px;height:14px;border-radius:50%;border:1px solid rgba(255,255,255,0.15);cursor:pointer;vertical-align:middle;}
 .dice-dot.ability{background:green;}
 .dice-dot.proficiency{background:yellow;}
 .dice-dot.boost{background:blue;}
 .dice-dot.force{background:white; border:1px solid #ccc;}
+.dice-dot.selected{box-shadow:0 0 4px #fff;}
 .dice-roller{margin-top:8px;padding:12px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:8px}
 .dice-controls{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 .dice-controls label{display:flex;flex-direction:column;align-items:center;font-size:12px}
@@ -203,40 +204,35 @@ button{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:6p
 </div>
 
 <script>
-// --- Skills / Attributes ---
 const ALL_SKILLS=[
 "Astrogation","Athletics","Brawl","Computers","Coordination","Cool","Deception","Discipline",
 "Leadership","Mechanics","Medicine","Negotiation","Perception","Piloting (Planetary)","Piloting (Space)",
 "Resilience","Skulduggery","Stealth","Streetwise","Survival","Vigilance","Lightsaber"
 ];
-const SKILL_ATTRIBUTES={
+
+const skillAttributeMap = {
   "Brawn":["Athletics","Brawl","Resilience"],
-  "Agility":["Skulduggery","Stealth","Coordination","Piloting (Planetary)","Piloting (Space)"],
-  "Intellect":["Computers","Mechanics","Medicine","Astrogation","Negotiation"],
-  "Cunning":["Deception","Cool","Streetwise","Survival"],
-  "Willpower":["Discipline","Leadership","Vigilance"],
-  "Presence":["Lightsaber","Charm","Negotiation"]
+  "Agility":["Coordination","Piloting (Planetary)","Piloting (Space)","Stealth"],
+  "Intellect":["Computers","Medicine","Mechanics","Astrogation"],
+  "Cunning":["Deception","Skulduggery","Negotiation","Streetwise","Survival"],
+  "Willpower":["Discipline","Vigilance"],
+  "Presence":["Cool","Leadership","Lightsaber","Negotiation"]
 };
 
-let characters=[],selectedIndex=null;
+let characters=[], selectedIndex=null;
 
-// --- Dice faces ---
 const diceFaces={
-ability:["dice/green_blank.jpg","dice/green_success.jpg","dice/green_success_success.jpg","dice/green_success_adv.jpg","dice/green_advantage.jpg","dice/green_advantage_advantage.jpg"],
-proficiency:["dice/yellow_blank.jpg","dice/yellow_success.jpg","dice/yellow_success_adv.jpg","dice/yellow_success_adv.jpg","dice/yellow_success_success.jpg","dice/yellow_success_success.jpg","dice/yellow_advantage.jpg","dice/yellow_advantage.jpg","dice/yellow_triumph.jpg"],
-boost:["dice/blue_blank.jpg","dice/blue_success.jpg","dice/blue_success_adv.jpg","dice/blue_advantage.jpg","dice/blue_advantage.jpg"],
-force:["dice/white_dark.jpg","dice/white_light.jpg","dice/white_light_light.jpg"]
+ability:["green_blank.jpg","green_success.jpg","green_success_success.jpg","green_success_adv.jpg","green_advantage.jpg","green_advantage_advantage.jpg"],
+proficiency:["yellow_blank.jpg","yellow_success.jpg","yellow_success_adv.jpg","yellow_success_adv.jpg","yellow_success_success.jpg","yellow_success_success.jpg","yellow_advantage.jpg","yellow_advantage.jpg","yellow_triumph.jpg"],
+boost:["blue_blank.jpg","blue_blank.jpg","blue_success.jpg","blue_success_adv.jpg","blue_advantage.jpg","blue_advantage_advantage.jpg"],
+force:["white_dark.jpg","white_dark.jpg","white_light.jpg","white_light_light.jpg"]
 };
-
-// Optional dice value table for calculation
-const diceValues={ability:[],proficiency:[],boost:[],force:[]}; // can be expanded later
 
 // --- Storage ---
 function saveToStorage(){localStorage.setItem("ffgChars",JSON.stringify(characters))}
 function loadFromStorage(){const d=localStorage.getItem("ffgChars"); if(d) characters=JSON.parse(d)}
 function refreshCharList(){
-  const list=document.getElementById("charList");
-  list.innerHTML="";
+  const list=document.getElementById("charList"); list.innerHTML="";
   characters.forEach((c,i)=>{
     const div=document.createElement("div");
     div.className="char-item"+(i===selectedIndex?" active":"");
@@ -262,8 +258,7 @@ function openCharacter(index){
   document.getElementById("defense").value=c.defense||0;
   document.getElementById("gear").value=c.gear||"";
   renderStats(c.stats);
-  renderSkills(c.skills);
-  updateDiceRollerFromSkills();
+  renderSkills(c.skills, c.stats);
   refreshCharList();
 }
 
@@ -288,56 +283,37 @@ function saveCharacter(){
 
 // --- Stats ---
 function renderStats(stats){
-  const statGrid=document.getElementById("stats");
-  statGrid.innerHTML="";
+  const statGrid=document.getElementById("stats"); statGrid.innerHTML="";
   ["Brawn","Agility","Intellect","Cunning","Willpower","Presence"].forEach(s=>{
-    const div=document.createElement("div");
-    div.className="stat";
+    const div=document.createElement("div"); div.className="stat";
     div.innerHTML=`<div>${s}</div><input type="number" min="0" value="${stats?.[s]||0}" data-stat="${s}" />`;
     statGrid.appendChild(div);
   });
 }
 function readStats(){
-  const inputs=document.querySelectorAll("#stats input");
-  const s={};
+  const inputs=document.querySelectorAll("#stats input"); const s={};
   inputs.forEach(i=>s[i.dataset.stat]=parseInt(i.value)||0);
   return s;
 }
 
 // --- Skills ---
-function renderSkills(skills){
-  const skillList=document.getElementById("skillList");
-  skillList.innerHTML="";
+function renderSkills(skills, stats){
+  const skillList=document.getElementById("skillList"); skillList.innerHTML="";
   ALL_SKILLS.forEach(skill=>{
-    if(!skills[skill]) skills[skill]={rank:0,dice:{}};
+    if(!skills[skill]) skills[skill]={rank:0};
     const rank = skills[skill].rank||0;
-    const div=document.createElement("div");
-    div.className="skill";
-    const attribute=getSkillAttribute(skill);
-    const attributeValue=characters[selectedIndex].stats[attribute]||0;
-    div.innerHTML=`
-      <span>${skill}</span>
-      <input type="number" min="0" value="${rank}" data-skill="${skill}">
-      <div class="skillDice"></div>
-    `;
-    const diceDiv=div.querySelector(".skillDice");
-    const maxDice=Math.max(rank,attributeValue);
-    let numAbility=maxDice;
-    let numProficiency=0;
-    if(rank>0){
-      numProficiency=Math.min(rank,attributeValue);
-      numAbility=maxDice-numProficiency;
-    }
-    for(let i=0;i<numAbility;i++){
-      const d=document.createElement("span"); d.className="dice-dot ability"; diceDiv.appendChild(d);
-    }
-    for(let i=0;i<numProficiency;i++){
-      const d=document.createElement("span"); d.className="dice-dot proficiency"; diceDiv.appendChild(d);
-    }
-    div.querySelector("input").oninput=(e)=>{
-      skills[skill].rank=parseInt(e.target.value)||0;
-      saveCharacter();
-    }
+    let attrValue=0;
+    for(const attr in skillAttributeMap){if(skillAttributeMap[attr].includes(skill)){attrValue=stats[attr]||0;break;}}
+    let abilityDice=Math.max(attrValue, rank);
+    let proficiencyDice=Math.min(attrValue, rank);
+
+    const div=document.createElement("div"); div.className="skill";
+    let diceHTML="";
+    for(let i=0;i<abilityDice-proficiencyDice;i++) diceHTML+=`<span class="dice-dot ability"></span>`;
+    for(let i=0;i<proficiencyDice;i++) diceHTML+=`<span class="dice-dot proficiency"></span>`;
+    div.innerHTML=`<span>${skill}</span><input type="number" min="0" value="${rank}" data-skill="${skill}"><div class="skillDice">${diceHTML}</div>`;
+    
+    div.querySelector("input").oninput=(e)=>{skills[skill].rank=parseInt(e.target.value)||0; saveCharacter();}
     skillList.appendChild(div);
   });
 }
@@ -351,32 +327,14 @@ function readSkills(){
   return skills;
 }
 
-function getSkillAttribute(skill){
-  for(const attr in SKILL_ATTRIBUTES){
-    if(SKILL_ATTRIBUTES[attr].includes(skill)) return attr;
-  }
-  return "Brawn";
-}
-
 // --- Dice Roller ---
-function updateDiceRollerFromSkills(){
-  if(selectedIndex===null) return;
-  const skills = characters[selectedIndex].skills||{};
-  ["Ability","Proficiency","Boost","Force"].forEach(type=>document.getElementById("dice"+type).value=0);
-  for(const skill in skills){
-    // Currently, we only increment green dice as placeholder
-    if(skills[skill].rank>0) document.getElementById("diceAbility").value++;
-  }
-}
 function rollDieFace(type){return diceFaces[type][Math.floor(Math.random()*diceFaces[type].length)];}
 document.getElementById("rollDiceBtn").onclick=()=>{
-  const resultContainer=document.getElementById("diceResult");
-  resultContainer.innerHTML="";
+  const resultContainer=document.getElementById("diceResult"); resultContainer.innerHTML="";
   ["Ability","Proficiency","Boost","Force"].forEach(type=>{
     const n=parseInt(document.getElementById("dice"+type).value)||0;
     for(let i=0;i<n;i++){
-      const img=document.createElement("img");
-      img.src=rollDieFace(type.toLowerCase());
+      const img=document.createElement("img"); img.src="dice/"+rollDieFace(type.toLowerCase());
       img.style.width="36px"; img.style.height="36px"; img.style.margin="2px";
       resultContainer.appendChild(img);
     }
@@ -386,73 +344,47 @@ document.getElementById("clearDiceBtn").onclick=()=>document.getElementById("dic
 
 // --- Menu buttons ---
 document.getElementById("newBtn").onclick=()=>{
-  characters.push({name:"New Character",stats:{Brawn:0,Agility:0,Intellect:0,Cunning:0,Willpower:0,Presence:0},skills:{},xp:0,wounds:0,strain:0,soak:0,defense:0,gear:""});
-  selectedIndex=characters.length-1;
-  openCharacter(selectedIndex);
-  saveToStorage();
+  characters.push({name:"New Character",stats:{},skills:{}});
+  selectedIndex=characters.length-1; openCharacter(selectedIndex); saveToStorage();
 };
 document.getElementById("duplicateBtn").onclick=()=>{
   if(selectedIndex===null) return;
-  characters.push(JSON.parse(JSON.stringify(characters[selectedIndex])));
-  selectedIndex=characters.length-1;
-  openCharacter(selectedIndex);
-  saveToStorage();
+  const copy=JSON.parse(JSON.stringify(characters[selectedIndex]));
+  copy.name+=" Copy"; characters.push(copy);
+  selectedIndex=characters.length-1; openCharacter(selectedIndex); saveToStorage();
 };
 document.getElementById("deleteBtn").onclick=()=>{
   if(selectedIndex===null) return;
   characters.splice(selectedIndex,1);
-  selectedIndex=null;
-  document.getElementById("editorForm").style.display="none";
-  document.getElementById("charNameDisplay").textContent="— select a character —";
-  refreshCharList();
-  saveToStorage();
-};
-document.getElementById("exportBtn").onclick=()=>{
-  const dataStr = JSON.stringify(characters,null,2);
-  const blob = new Blob([dataStr],{type:"application/json"});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href=url; a.download="ffg_characters.json"; a.click();
-  URL.revokeObjectURL(url);
-};
-document.getElementById("importBtn").onclick=()=>document.getElementById("importFile").click();
-document.getElementById("importFile").onchange=function(e){
-  const file=this.files[0]; const reader=new FileReader();
-  reader.onload=function(evt){characters=JSON.parse(evt.target.result);selectedIndex=null;refreshCharList();saveToStorage();}
-  reader.readAsText(file);
+  selectedIndex=null; openCharacter(null); saveToStorage();
 };
 document.getElementById("saveBtn").onclick=saveCharacter;
+document.getElementById("exportBtn").onclick=()=>{const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([JSON.stringify(characters,null,2)],{type:"application/json"})); a.download="characters.json"; a.click();}
+document.getElementById("importBtn").onclick=()=>document.getElementById("importFile").click();
+document.getElementById("importFile").onchange=e=>{
+  const file=e.target.files[0]; const reader=new FileReader();
+  reader.onload=function(){characters=JSON.parse(reader.result); selectedIndex=null; refreshCharList(); saveToStorage();}
+  reader.readAsText(file);
+};
 document.getElementById("seedBtn").onclick=()=>{
-  characters=[{
-    name:"Luke Skywalker",
-    species:"Human",
-    career:"Jedi",
-    notes:"Hero of the Rebellion",
-    stats:{Brawn:2,Agility:3,Intellect:3,Cunning:2,Willpower:3,Presence:2},
-    skills:{"Lightsaber":{rank:3},"Perception":{rank:2},"Piloting (Space)":{rank:2},"Negotiation":{rank:1}},
-    wounds:10,strain:5,soak:2,defense:1,gear:"Lightsaber, X-wing"},
-  }];
-  selectedIndex=0;
-  openCharacter(0);
-  saveToStorage();
+  characters=[{name:"Luke Skywalker",species:"Human",career:"Jedi",stats:{Brawn:2,Agility:2,Intellect:3,Cunning:2,Willpower:3,Presence:2},skills:{"Lightsaber":{rank:3},"Athletics":{rank:2}}}];
+  selectedIndex=0; openCharacter(0); saveToStorage();
 };
 document.getElementById("clearAllBtn").onclick=()=>{
-  if(confirm("Clear all characters?")){characters=[];selectedIndex=null;refreshCharList();document.getElementById("editorForm").style.display="none";saveToStorage();}
+  characters=[]; selectedIndex=null; refreshCharList(); saveToStorage();
 };
 document.getElementById("printBtn").onclick=()=>{
   if(selectedIndex===null) return;
-  document.getElementById("printName").textContent=characters[selectedIndex].name;
-  let statsHTML="",skillsHTML="";
   const c=characters[selectedIndex];
-  for(const stat in c.stats) statsHTML+=`<div>${stat}: ${c.stats[stat]}</div>`;
-  for(const skill in c.skills) skillsHTML+=`<div>${skill}: ${c.skills[skill].rank}</div>`;
-  document.getElementById("sheetStats").innerHTML=statsHTML;
-  document.getElementById("sheetSkills").innerHTML=skillsHTML;
+  document.getElementById("printName").textContent=c.name;
+  document.getElementById("sheetStats").innerHTML=Object.entries(c.stats).map(([k,v])=>`${k}: ${v}`).join("<br>");
+  document.getElementById("sheetSkills").innerHTML=Object.entries(c.skills).map(([k,v])=>`${k}: ${v.rank}`).join("<br>");
   window.print();
 };
 
 // --- Init ---
 loadFromStorage(); refreshCharList();
+if(characters.length>0){selectedIndex=0; openCharacter(0);}
 </script>
 </body>
 </html>
