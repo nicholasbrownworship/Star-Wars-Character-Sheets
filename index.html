@@ -61,6 +61,10 @@ textarea{resize:vertical}
 .dice-result{background:rgba(0,0,0,0.25);padding:10px;border-radius:8px;min-height:48px;display:flex;flex-wrap:wrap;gap:2px;align-items:center}
 .actions{display:flex;gap:8px;flex-wrap:wrap}
 button{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:6px 10px;border-radius:8px;color:inherit;cursor:pointer}
+.net-result{margin-top:6px;font-weight:600;}
+.net-positive{color:#4ade80;} /* green */
+.net-negative{color:#f87171;} /* red */
+.net-neutral{color:#fff;} /* white */
 </style>
 </head>
 <body>
@@ -189,22 +193,59 @@ force:["white_dark.jpg","white_dark.jpg","white_dark.jpg","white_dark.jpg","whit
 
 // ================== DICE ROLLER ==================
 function rollDieFace(type){return diceFaces[type][Math.floor(Math.random()*diceFaces[type].length)];}
+
 function rollDice(){
-  const resultDiv=document.getElementById("diceResult");
-  resultDiv.innerHTML="";
-  const types=["ability","proficiency","boost","difficulty","challenge","setback","force"];
-  types.forEach(type=>{
-    const n=parseInt(document.getElementById("dice"+type.charAt(0).toUpperCase()+type.slice(1)).value)||0;
-    for(let i=0;i<n;i++){
-      const img=document.createElement("img");
-      img.src="dice/"+rollDieFace(type);
-      img.style.width="36px"; img.style.height="36px"; img.style.margin="2px";
+  const resultDiv = document.getElementById("diceResult");
+  resultDiv.innerHTML = "";
+
+  const types = ["ability","proficiency","boost","difficulty","challenge","setback","force"];
+  let totals = { success:0, advantage:0, triumph:0, failure:0, threat:0, despair:0, light:0, dark:0 };
+
+  types.forEach(type => {
+    const n = parseInt(document.getElementById("dice" + type.charAt(0).toUpperCase() + type.slice(1)).value) || 0;
+    for(let i=0; i<n; i++){
+      const face = rollDieFace(type);
+      const img = document.createElement("img");
+      img.src = "dice/" + face;
+      img.style.width = "36px"; img.style.height = "36px"; img.style.margin = "2px";
       resultDiv.appendChild(img);
+
+      if(face.includes("success")) totals.success++;
+      if(face.includes("advantage")) totals.advantage++;
+      if(face.includes("triumph")) totals.triumph++;
+      if(face.includes("failure")) totals.failure++;
+      if(face.includes("threat")) totals.threat++;
+      if(face.includes("despair")) totals.despair++;
+      if(face.includes("light")) totals.light++;
+      if(face.includes("dark")) totals.dark++;
     }
   });
+
+  // Net calculation
+  const netSuccess = totals.success + totals.triumph - totals.failure - totals.despair;
+  const netAdvantage = totals.advantage - totals.threat;
+
+  const summary = document.createElement("div");
+  summary.style.marginTop = "8px";
+  summary.style.fontSize = "14px";
+  summary.innerHTML = `
+    <strong>Totals:</strong><br>
+    Success: ${totals.success}, Advantage: ${totals.advantage}, Triumph: ${totals.triumph}<br>
+    Failure: ${totals.failure}, Threat: ${totals.threat}, Despair: ${totals.despair}<br>
+    Light: ${totals.light}, Dark: ${totals.dark}
+  `;
+  resultDiv.appendChild(summary);
+
+  // Net result display
+  const netDiv = document.createElement("div");
+  netDiv.className = "net-result " + 
+    (netSuccess > 0 || netAdvantage > 0 ? "net-positive" : (netSuccess < 0 || netAdvantage < 0 ? "net-negative" : "net-neutral"));
+  netDiv.innerHTML = `<strong>Net Result:</strong> Success: ${netSuccess}, Advantage: ${netAdvantage}`;
+  resultDiv.appendChild(netDiv);
 }
-document.getElementById("rollDiceBtn").onclick=rollDice;
-document.getElementById("clearDiceBtn").onclick=()=>{document.getElementById("diceResult").innerHTML="";};
+
+document.getElementById("rollDiceBtn").onclick = rollDice;
+document.getElementById("clearDiceBtn").onclick = ()=>{document.getElementById("diceResult").innerHTML="";};
 
 // ================== CHARACTER FUNCTIONS ==================
 function saveToStorage(){localStorage.setItem("ffgChars",JSON.stringify(characters))}
