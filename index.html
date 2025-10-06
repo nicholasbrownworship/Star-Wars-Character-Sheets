@@ -49,151 +49,168 @@ textarea{resize:vertical}
 .stat input{width:56px;text-align:center;font-size:16px;background:transparent;border:0;color:inherit}
 .skills{display:flex;flex-direction:column;gap:6px;max-height:400px;overflow-y:auto}
 .skill{display:flex;justify-content:space-between;align-items:center;padding:6px;border-radius:8px;background:var(--glass)}
-.skill input{width:40px;margin-left:8px}
-.skill .skillDice{min-width:100px;display:flex;gap:4px}
+.skill .skillDice{display:flex;gap:4px}
+.dice-dot{width:16px;height:16px;border-radius:50%;display:inline-block;border:1px solid rgba(255,255,255,0.15);vertical-align:middle}
+.dice-dot.ability{background:green}
+.dice-dot.proficiency{background:yellow}
+.dice-dot.boost{background:blue}
+.dice-dot.force{background:white;border:1px solid #ccc}
 .dice-roller{margin-top:8px;padding:12px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:8px}
-.dice-controls{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.dice-controls{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
 .dice-controls label{display:flex;flex-direction:column;align-items:center;font-size:12px}
 .dice-result{background:rgba(0,0,0,0.25);padding:10px;border-radius:8px;min-height:48px;display:flex;flex-wrap:wrap;gap:2px;align-items:center}
-.result-summary{margin-top:10px;font-size:14px;padding:8px;background:rgba(0,0,0,0.35);border-radius:8px}
 .actions{display:flex;gap:8px;flex-wrap:wrap}
 button{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:6px 10px;border-radius:8px;color:inherit;cursor:pointer}
-.dot {display:inline-block;width:16px;height:16px;border-radius:50%;margin-right:2px;}
-.dot.green {background:#4caf50;}
-.dot.yellow {background:#ffeb3b;border:1px solid #aaa;}
 </style>
 </head>
 <body>
 <div class="app">
-  <aside class="panel datapad">
-    <header>
-      <div class="logo">SW</div>
-      <div>
-        <h1>FFG Character Tracker</h1>
-        <div class="meta">Local-only · export/import JSON · printable</div>
-      </div>
-    </header>
-    <div class="controls" style="margin-top:12px">
-      <button id="newBtn">New</button>
-      <button id="duplicateBtn">Duplicate</button>
-      <button id="deleteBtn">Delete</button>
-      <button id="exportBtn">Export</button>
-      <button id="importBtn">Import</button>
-      <input id="importFile" type="file" accept="application/json" style="display:none" />
-    </div>
-    <div class="character-list" id="charList"></div>
-    <div style="margin-top:12px;border-top:1px solid rgba(255,255,255,0.03);padding-top:12px">
-      <div class="meta">Quick actions</div>
-      <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
-        <button id="seedBtn">Load Sample</button>
-        <button id="clearAllBtn">Clear All</button>
-        <button id="printBtn">Print Sheet</button>
-      </div>
-    </div>
-  </aside>
+<aside class="panel datapad">
+<header>
+<div class="logo">SW</div>
+<div><h1>FFG Character Tracker</h1><div class="meta">Local-only · export/import JSON · printable</div></div>
+</header>
+<div class="controls" style="margin-top:12px">
+<button id="newBtn">New</button>
+<button id="duplicateBtn">Duplicate</button>
+<button id="deleteBtn">Delete</button>
+<button id="exportBtn">Export</button>
+<button id="importBtn">Import</button>
+<input id="importFile" type="file" accept="application/json" style="display:none" />
+</div>
+<div class="character-list" id="charList"></div>
+<div style="margin-top:12px;border-top:1px solid rgba(255,255,255,0.03);padding-top:12px">
+<div class="meta">Quick actions</div>
+<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+<button id="seedBtn">Load Sample</button>
+<button id="clearAllBtn">Clear All</button>
+<button id="printBtn">Print Sheet</button>
+</div>
+</div>
+</aside>
 
-  <main class="panel datapad">
-    <div style="display:flex;justify-content:space-between;align-items:center">
-      <div>
-        <div class="meta">Editing</div>
-        <div id="charNameDisplay" style="font-size:20px">— select a character —</div>
-      </div>
-      <div class="actions">
-        <button id="saveBtn">Save</button>
-      </div>
-    </div>
+<main class="panel datapad">
+<div style="display:flex;justify-content:space-between;align-items:center">
+<div><div class="meta">Editing</div><div id="charNameDisplay" style="font-size:20px">— select a character —</div></div>
+<div class="actions"><button id="saveBtn">Save</button></div>
+</div>
 
-    <div id="editorForm" style="display:none" class="editor">
-      <div class="row">
-        <div class="col">
-          <label>Name</label>
-          <input id="name" type="text" placeholder="Character name" />
-        </div>
-        <div style="width:190px">
-          <label>Species</label>
-          <input id="species" type="text" placeholder="Human / Twi'lek" />
-        </div>
-        <div style="width:220px">
-          <label>Career / Role</label>
-          <input id="career" type="text" placeholder="Smuggler / Bounty Hunter" />
-        </div>
-      </div>
+<div id="editorForm" style="display:none" class="editor">
+<div class="row">
+<div class="col">
+<label>Name</label>
+<input id="name" type="text" placeholder="Character name" />
+</div>
+<div style="width:190px">
+<label>Species</label>
+<input id="species" type="text" placeholder="Human / Twi'lek" />
+</div>
+<div style="width:220px">
+<label>Career / Role</label>
+<input id="career" type="text" placeholder="Smuggler / Bounty Hunter" />
+</div>
+</div>
 
-      <div>
-        <label>Motivation / Notes</label>
-        <textarea id="notes" rows="3"></textarea>
-      </div>
+<div>
+<label>Motivation / Notes</label>
+<textarea id="notes" rows="3"></textarea>
+</div>
 
-      <div>
-        <label>Characteristics</label>
-        <div class="stat-grid" id="stats"></div>
-      </div>
+<div>
+<label>Characteristics</label>
+<div class="stat-grid" id="stats"></div>
+</div>
 
-      <div style="display:flex;gap:12px">
-        <div style="flex:1"><label>Wounds</label><input id="wounds" type="number" min="0" /></div>
-        <div style="flex:1"><label>Strain</label><input id="strain" type="number" min="0" /></div>
-        <div style="flex:1"><label>Soak</label><input id="soak" type="number" min="0" /></div>
-        <div style="flex:1"><label>Defense</label><input id="defense" type="number" min="0" /></div>
-      </div>
+<div style="display:flex;gap:12px">
+<div style="flex:1"><label>Wounds</label><input id="wounds" type="number" min="0" /></div>
+<div style="flex:1"><label>Strain</label><input id="strain" type="number" min="0" /></div>
+<div style="flex:1"><label>Soak</label><input id="soak" type="number" min="0" /></div>
+<div style="flex:1"><label>Defense</label><input id="defense" type="number" min="0" /></div>
+</div>
 
-      <div>
-        <label>Gear / Equipment</label>
-        <input id="gear" type="text" placeholder="Blaster, Lightsaber, Armor..." />
-      </div>
+<div>
+<label>Gear / Equipment</label>
+<input id="gear" type="text" placeholder="Blaster, Lightsaber, Armor..." />
+</div>
 
-      <div>
-        <label>Skills</label>
-        <div class="skills" id="skillList"></div>
-      </div>
+<div>
+<label>Skills</label>
+<div class="skills" id="skillList"></div>
+</div>
 
-      <div class="dice-roller">
-        <label>Dice Roller</label>
-        <div class="dice-controls">
-          <label>Ability <input type="number" min="0" id="diceAbility"></label>
-          <label>Proficiency <input type="number" min="0" id="diceProficiency"></label>
-          <label>Boost <input type="number" min="0" id="diceBoost"></label>
-          <label>Difficulty <input type="number" min="0" id="diceDifficulty"></label>
-          <label>Challenge <input type="number" min="0" id="diceChallenge"></label>
-          <label>Setback <input type="number" min="0" id="diceSetback"></label>
-          <label>Force <input type="number" min="0" id="diceForce"></label>
-        </div>
-        <div style="margin-top:6px">
-          <button id="rollDiceBtn">Roll</button>
-          <button id="clearDiceBtn">Clear</button>
-        </div>
-        <div class="dice-result" id="diceResult"></div>
-        <div class="result-summary" id="resultSummary"></div>
-      </div>
-    </div>
-  </main>
+<div class="dice-roller">
+<label>Dice Roller</label>
+<div class="dice-controls">
+<label>Ability<input type="number" min="0" id="diceAbility"></label>
+<label>Proficiency<input type="number" min="0" id="diceProficiency"></label>
+<label>Boost<input type="number" min="0" id="diceBoost"></label>
+<label>Difficulty<input type="number" min="0" id="diceDifficulty"></label>
+<label>Challenge<input type="number" min="0" id="diceChallenge"></label>
+<label>Setback<input type="number" min="0" id="diceSetback"></label>
+<label>Force<input type="number" min="0" id="diceForce"></label>
+</div>
+<div style="margin-top:6px">
+<button id="rollDiceBtn">Roll</button>
+<button id="clearDiceBtn">Clear</button>
+</div>
+<div class="dice-result" id="diceResult"></div>
+</div>
+</main>
 </div>
 
 <script>
-// --- Skills Table ---
-const SKILL_TO_STAT={
-  "Astrogation":"Intellect","Athletics":"Brawn","Brawl":"Brawn","Computers":"Intellect","Coordination":"Agility","Cool":"Presence","Deception":"Cunning","Discipline":"Willpower","Leadership":"Presence","Mechanics":"Intellect","Medicine":"Intellect","Negotiation":"Presence","Perception":"Cunning","Piloting (Planetary)":"Agility","Piloting (Space)":"Agility","Resilience":"Brawn","Skulduggery":"Cunning","Stealth":"Agility","Streetwise":"Cunning","Survival":"Cunning","Vigilance":"Willpower","Lightsaber":"Brawn"
+// ================== CHARACTER DATA ==================
+const ALL_SKILLS=[
+"Astrogation","Athletics","Brawl","Computers","Coordination","Cool","Deception","Discipline",
+"Leadership","Mechanics","Medicine","Negotiation","Perception","Piloting (Planetary)","Piloting (Space)",
+"Resilience","Skulduggery","Stealth","Streetwise","Survival","Vigilance","Lightsaber"
+];
+const skillAttributes = {
+"Brawn":["Athletics","Brawl","Resilience"],
+"Agility":["Piloting (Planetary)","Piloting (Space)","Coordination","Stealth"],
+"Intellect":["Computers","Mechanics","Medicine","Negotiation","Perception","Astrogation"],
+"Cunning":["Deception","Skulduggery","Streetwise","Survival"],
+"Willpower":["Discipline","Leadership","Vigilance"],
+"Presence":["Cool","Charm"]
 };
-const ALL_SKILLS=Object.keys(SKILL_TO_STAT);
 
 let characters=[],selectedIndex=null;
 
-// --- Dice Faces (now .jpg) ---
+// ================== DICE FACES ==================
 const diceFaces={
-  ability:["green_blank.jpg","green_success.jpg","green_success_success.jpg","green_success_adv.jpg","green_advantage.jpg","green_advantage_advantage.jpg"],
-  proficiency:["yellow_blank.jpg","yellow_success.jpg","yellow_success_adv.jpg","yellow_success_adv.jpg","yellow_success_success.jpg","yellow_success_success.jpg","yellow_advantage.jpg","yellow_advantage_adv.jpg","yellow_triumph.jpg"],
-  difficulty:["purple_blank.jpg","purple_failure.jpg","purple_failure_failure.jpg","purple_failure_threat.jpg","purple_threat.jpg","purple_threat.jpg","purple_threat_threat.jpg"],
-  challenge:["red_blank.jpg","red_despair.jpg","red_failure.jpg","red_failure.jpg","red_failure_failure.jpg","red_failure_failure.jpg","red_failure_threat.jpg","red_failure_threat.jpg","red_threat.jpg","red_threat.jpg","red_threat_threat.jpg","red_threat_threat.jpg"],
-  boost:["blue_blank.jpg","blue_blank.jpg","blue_success.jpg","blue_success_adv.jpg","blue_advantage.jpg","blue_advantage_adv.jpg"],
-  setback:["black_blank.jpg","black_blank.jpg","black_failure.jpg","black_failure.jpg","black_threat.jpg","black_threat.jpg"],
-  force:["white_dark.jpg","white_dark.jpg","white_dark.jpg","white_dark.jpg","white_dark.jpg","white_dark.jpg","white_light.jpg","white_light.jpg","white_light_light.jpg","white_light_light.jpg","white_light_light.jpg","white_dark_dark.jpg"]
+ability:["green_blank.jpg","green_success.jpg","green_success.jpg","green_success_success.jpg","green_success_adv.jpg","green_advantage.jpg","green_advantage.jpg","green_advantage_advantage.jpg"],
+proficiency:["yellow_blank.jpg","yellow_success.jpg","yellow_success.jpg","yellow_success_adv.jpg","yellow_success_adv.jpg","yellow_success_adv.jpg","yellow_success_success.jpg","yellow_success_success.jpg","yellow_advantage.jpg","yellow_advantage_adv.jpg","yellow_advantage_adv.jpg","yellow_triumph.jpg"],
+difficulty:["purple_blank.jpg","purple_failure.jpg","purple_failure_failure.jpg","purple_failure_threat.jpg","purple_threat.jpg","purple_threat.jpg","purple_threat.jpg","purple_threat_threat.jpg"],
+challenge:["red_blank.jpg","red_despair.jpg","red_failure.jpg","red_failure.jpg","red_failure_failure.jpg","red_failure_failure.jpg","red_failure_threat.jpg","red_failure_threat.jpg","red_threat.jpg","red_threat.jpg","red_threat_threat.jpg","red_threat_threat.jpg"],
+boost:["blue_blank.jpg","blue_blank.jpg","blue_success.jpg","blue_success_adv.jpg","blue_advantage.jpg","blue_advantage_adv.jpg"],
+setback:["black_blank.jpg","black_blank.jpg","black_failure.jpg","black_failure.jpg","black_threat.jpg","black_threat.jpg"],
+force:["white_dark.jpg","white_dark.jpg","white_dark.jpg","white_dark.jpg","white_dark.jpg","white_dark.jpg","white_light.jpg","white_light.jpg","white_light_light.jpg","white_light_light.jpg","white_light_light.jpg","white_dark_dark.jpg"]
 };
 
-// --- Storage ---
+// ================== DICE ROLLER ==================
+function rollDieFace(type){return diceFaces[type][Math.floor(Math.random()*diceFaces[type].length)];}
+function rollDice(){
+  const resultDiv=document.getElementById("diceResult");
+  resultDiv.innerHTML="";
+  const types=["ability","proficiency","boost","difficulty","challenge","setback","force"];
+  types.forEach(type=>{
+    const n=parseInt(document.getElementById("dice"+type.charAt(0).toUpperCase()+type.slice(1)).value)||0;
+    for(let i=0;i<n;i++){
+      const img=document.createElement("img");
+      img.src="dice/"+rollDieFace(type);
+      img.style.width="36px"; img.style.height="36px"; img.style.margin="2px";
+      resultDiv.appendChild(img);
+    }
+  });
+}
+document.getElementById("rollDiceBtn").onclick=rollDice;
+document.getElementById("clearDiceBtn").onclick=()=>{document.getElementById("diceResult").innerHTML="";};
+
+// ================== CHARACTER FUNCTIONS ==================
 function saveToStorage(){localStorage.setItem("ffgChars",JSON.stringify(characters))}
 function loadFromStorage(){const d=localStorage.getItem("ffgChars"); if(d) characters=JSON.parse(d)}
 function refreshCharList(){
-  const list=document.getElementById("charList");
-  list.innerHTML="";
+  const list=document.getElementById("charList"); list.innerHTML="";
   characters.forEach((c,i)=>{
     const div=document.createElement("div");
     div.className="char-item"+(i===selectedIndex?" active":"");
@@ -203,27 +220,57 @@ function refreshCharList(){
   });
 }
 
-// --- Character Editing ---
+function renderStats(stats){
+  const statGrid=document.getElementById("stats"); statGrid.innerHTML="";
+  ["Brawn","Agility","Intellect","Cunning","Willpower","Presence"].forEach(s=>{
+    const div=document.createElement("div");
+    div.className="stat";
+    div.innerHTML=`<div>${s}</div><input type="number" min="0" value="${stats?.[s]||0}" data-stat="${s}" />`;
+    statGrid.appendChild(div);
+  });
+}
+
+function renderSkills(skills){
+  const skillList=document.getElementById("skillList"); skillList.innerHTML="";
+  ALL_SKILLS.forEach(skill=>{
+    if(!skills[skill]) skills[skill]={rank:0};
+    const rank=skills[skill].rank||0;
+    const attr=Object.keys(skillAttributes).find(a=>skillAttributes[a].includes(skill));
+    const attrValue=(selectedIndex!==null && characters[selectedIndex].stats[attr])||0;
+    const container=document.createElement("div"); container.className="skill";
+    container.innerHTML=`<span>${skill}</span><div class="skillDice"></div>`;
+    const diceContainer=container.querySelector(".skillDice");
+    let total=Math.max(rank,attrValue);
+    let upgrade=Math.min(rank,attrValue);
+    for(let i=0;i<total;i++){
+      const dot=document.createElement("span"); dot.className="dice-dot ability";
+      if(upgrade>0){dot.className="dice-dot proficiency"; upgrade--;}
+      diceContainer.appendChild(dot);
+    }
+    skillList.appendChild(container);
+  });
+}
+
 function openCharacter(index){
   selectedIndex=index;
-  const c=characters[index];
   document.getElementById("editorForm").style.display="block";
+  const c=characters[index];
   document.getElementById("charNameDisplay").textContent=c.name;
-  document.getElementById("name").value=c.name||"";
-  document.getElementById("species").value=c.species||"";
-  document.getElementById("career").value=c.career||"";
+  document.getElementById("name").value=c.name;
+  document.getElementById("species").value=c.species;
+  document.getElementById("career").value=c.career;
   document.getElementById("notes").value=c.notes||"";
   document.getElementById("wounds").value=c.wounds||0;
   document.getElementById("strain").value=c.strain||0;
   document.getElementById("soak").value=c.soak||0;
   document.getElementById("defense").value=c.defense||0;
   document.getElementById("gear").value=c.gear||"";
-  renderStats(c.stats);
-  renderSkills(c.skills,c.stats);
+  renderStats(c.stats||{});
+  renderSkills(c.skills||{});
   refreshCharList();
 }
 
-function saveCharacter(){
+document.getElementById("saveBtn").onclick=()=>{
   if(selectedIndex===null) return;
   const c=characters[selectedIndex];
   c.name=document.getElementById("name").value;
@@ -235,128 +282,13 @@ function saveCharacter(){
   c.soak=parseInt(document.getElementById("soak").value)||0;
   c.defense=parseInt(document.getElementById("defense").value)||0;
   c.gear=document.getElementById("gear").value;
-  c.stats=readStats();
-  c.skills=readSkills();
-  refreshCharList();
-  saveToStorage();
+  c.stats={};
+  document.querySelectorAll("#stats input").forEach(i=>c.stats[i.dataset.stat]=parseInt(i.value)||0);
+  saveToStorage(); refreshCharList();
 }
 
-// --- Stats ---
-function renderStats(stats){
-  const statGrid=document.getElementById("stats");
-  statGrid.innerHTML="";
-  ["Brawn","Agility","Intellect","Cunning","Willpower","Presence"].forEach(s=>{
-    const div=document.createElement("div");
-    div.className="stat";
-    div.innerHTML=`<div>${s}</div><input type="number" min="0" value="${stats?.[s]||0}" data-stat="${s}" />`;
-    statGrid.appendChild(div);
-  });
-}
-function readStats(){
-  const inputs=document.querySelectorAll("#stats input");
-  const s={};
-  inputs.forEach(i=>s[i.dataset.stat]=parseInt(i.value)||0);
-  return s;
-}
-
-// --- Skills ---
-function renderSkills(skills,stats){
-  const skillList=document.getElementById("skillList");
-  skillList.innerHTML="";
-  ALL_SKILLS.forEach(skill=>{
-    if(!skills[skill]) skills[skill]={rank:0};
-    const rank = skills[skill].rank||0;
-    const statVal=stats?.[SKILL_TO_STAT[skill]]||0;
-
-    const base=Math.max(rank,statVal);
-    const upgrades=Math.min(rank,statVal);
-    const yellows=upgrades;
-    const greens=base-upgrades;
-
-    const diceDiv=document.createElement("div");
-    diceDiv.className="skillDice";
-
-    for(let i=0;i<greens;i++){diceDiv.innerHTML+=`<span class="dot green"></span>`;}
-    for(let i=0;i<yellows;i++){diceDiv.innerHTML+=`<span class="dot yellow"></span>`;}
-
-    const div=document.createElement("div");
-    div.className="skill";
-    div.innerHTML=`
-      <span>${skill}</span>
-      <input type="number" min="0" value="${rank}" data-skill="${skill}">
-    `;
-    div.appendChild(diceDiv);
-    div.querySelector("input").oninput=(e)=>{
-      skills[skill].rank=parseInt(e.target.value)||0;
-      saveCharacter();
-      renderSkills(skills,readStats());
-    }
-    skillList.appendChild(div);
-  });
-}
-function readSkills(){
-  const skills={};
-  document.querySelectorAll("#skillList .skill").forEach(div=>{
-    const input=div.querySelector("input");
-    skills[input.dataset.skill]={rank:parseInt(input.value)||0};
-  });
-  return skills;
-}
-
-// --- Dice Roller ---
-function rollDie(faces){return faces[Math.floor(Math.random()*faces.length)]}
-function rollDice(){
-  const resultDiv=document.getElementById("diceResult");
-  resultDiv.innerHTML="";
-  let tally={success:0,advantage:0,triumph:0,despair:0,threat:0,failure:0,light:0,dark:0};
-
-  function addDice(type,count){
-    for(let i=0;i<count;i++){
-      const face=rollDie(diceFaces[type]);
-      const img=document.createElement("img");
-      img.src= dice/ + face; img.style.height="38px";
-      resultDiv.appendChild(img);
-
-      if(face.includes("success")) tally.success++;
-      if(face.includes("failure")) tally.failure++;
-      if(face.includes("adv")) tally.advantage++;
-      if(face.includes("threat")) tally.threat++;
-      if(face.includes("triumph")) tally.triumph++;
-      if(face.includes("despair")) tally.despair++;
-      if(face.includes("light")) tally.light++;
-      if(face.includes("dark")) tally.dark++;
-    }
-  }
-
-  addDice("ability",parseInt(document.getElementById("diceAbility").value)||0);
-  addDice("proficiency",parseInt(document.getElementById("diceProficiency").value)||0);
-  addDice("boost",parseInt(document.getElementById("diceBoost").value)||0);
-  addDice("difficulty",parseInt(document.getElementById("diceDifficulty").value)||0);
-  addDice("challenge",parseInt(document.getElementById("diceChallenge").value)||0);
-  addDice("setback",parseInt(document.getElementById("diceSetback").value)||0);
-  addDice("force",parseInt(document.getElementById("diceForce").value)||0);
-
-  document.getElementById("resultSummary").textContent=
-    `Net Success: ${tally.success-tally.failure}, Net Advantage: ${tally.advantage-tally.threat}, Triumphs: ${tally.triumph}, Despairs: ${tally.despair}, Light: ${tally.light}, Dark: ${tally.dark}`;
-}
-document.getElementById("rollDiceBtn").onclick=rollDice;
-document.getElementById("clearDiceBtn").onclick=()=>{document.getElementById("diceResult").innerHTML="";document.getElementById("resultSummary").textContent=""};
-
-// --- Buttons ---
-document.getElementById("newBtn").onclick=()=>{characters.push({name:"New Character",species:"",career:"",notes:"",wounds:0,strain:0,soak:0,defense:0,gear:"",stats:{},skills:{}});selectedIndex=characters.length-1;openCharacter(selectedIndex);saveToStorage();}
-document.getElementById("deleteBtn").onclick=()=>{if(selectedIndex!==null){characters.splice(selectedIndex,1);selectedIndex=null;document.getElementById("editorForm").style.display="none";refreshCharList();saveToStorage();}};
-document.getElementById("duplicateBtn").onclick=()=>{if(selectedIndex!==null){const c=JSON.parse(JSON.stringify(characters[selectedIndex]));c.name+=" Copy";characters.push(c);refreshCharList();saveToStorage();}}
-document.getElementById("saveBtn").onclick=saveCharacter;
-document.getElementById("clearAllBtn").onclick=()=>{if(confirm("Clear all characters?")){characters=[];selectedIndex=null;saveToStorage();refreshCharList();document.getElementById("editorForm").style.display="none";}}
-document.getElementById("exportBtn").onclick=()=>{const data=JSON.stringify(characters);const blob=new Blob([data],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="characters.json";a.click();}
-document.getElementById("importBtn").onclick=()=>document.getElementById("importFile").click();
-document.getElementById("importFile").onchange=(e)=>{const file=e.target.files[0];if(file){const reader=new FileReader();reader.onload=(ev)=>{characters=JSON.parse(ev.target.result);refreshCharList();saveToStorage();};reader.readAsText(file);}};
-document.getElementById("seedBtn").onclick=()=>{characters.push({name:"Luke Skywalker",species:"Human",career:"Jedi",notes:"Farmboy turned Jedi.",wounds:12,strain:12,soak:4,defense:1,gear:"Lightsaber, Robes",stats:{Brawn:3,Agility:3,Intellect:2,Cunning:2,Willpower:3,Presence:4},skills:{"Lightsaber":{rank:2},"Cool":{rank:2},"Athletics":{rank:1},"Perception":{rank:1},"Leadership":{rank:2}}});selectedIndex=characters.length-1;openCharacter(selectedIndex);saveToStorage();}
-document.getElementById("printBtn").onclick=()=>window.print();
-
-// Init
-loadFromStorage();
-refreshCharList();
+// ================== INITIALIZE ==================
+loadFromStorage(); refreshCharList();
 </script>
 </body>
 </html>
