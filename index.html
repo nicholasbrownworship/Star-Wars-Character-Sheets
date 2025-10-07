@@ -50,7 +50,8 @@ textarea{resize:vertical}
 .stat input{width:56px;text-align:center;font-size:16px;background:transparent;border:0;color:inherit}
 .skills{display:flex;flex-direction:column;gap:6px;max-height:400px;overflow-y:auto}
 .skill{display:flex;justify-content:space-between;align-items:center;padding:6px;border-radius:8px;background:var(--glass)}
-.skill .skillDice{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+.skill .skillDice{display:flex;gap:4px;flex-wrap:wrap;align-items:center;cursor:pointer;padding:4px;border-radius:6px}
+.skill .skillDice:hover{box-shadow:0 0 8px rgba(68,215,255,0.08)}
 .dice-dot{width:12px;height:12px;border-radius:50%;}
 .dice-dot.ability{background:#00ff66;}
 .dice-dot.proficiency{background:#ffe600;}
@@ -163,15 +164,15 @@ const skillAttributes = {
   "Presence": ["Cool","Negotiation","Leadership"]
 };
 
-/* Dice face filenames - these should exist in a 'dice/' folder next to the HTML */
-const diceFaces = {
-  ability: ["green_blank.jpg","green_success.jpg","green_success.jpg","green_success_success.jpg","green_success_adv.jpg","green_advantage.jpg","green_advantage.jpg","green_advantage_advantage.jpg"],
-  proficiency: ["yellow_blank.jpg","yellow_success.jpg","yellow_success.jpg","yellow_success_adv.jpg","yellow_success_adv.jpg","yellow_success_adv.jpg","yellow_success_success.jpg","yellow_success_success.jpg","yellow_advantage.jpg","yellow_advantage_adv.jpg","yellow_advantage_adv.jpg","yellow_triumph.jpg"],
-  boost: ["blue_blank.jpg","blue_blank.jpg","blue_success.jpg","blue_success_adv.jpg","blue_advantage.jpg","blue_advantage_adv.jpg"],
-  difficulty: ["purple_blank.jpg","purple_failure.jpg","purple_failure_failure.jpg","purple_failure_threat.jpg","purple_threat.jpg","purple_threat.jpg","purple_threat.jpg","purple_threat_threat.jpg"],
-  challenge: ["red_blank.jpg","red_failure.jpg","red_failure.jpg","red_failure_failure.jpg","red_failure_failure.jpg","red_failure_threat.jpg","red_failure_threat.jpg","red_threat.jpg","red_threat.jpg","red_threat_threat.jpg","red_threat_threat.jpg","red_despair.jpg"],
-  setback: ["black_blank.jpg","black_blank.jpg","black_failure.jpg","black_failure.jpg","black_threat.jpg","black_threat.jpg"],
-  force: ["white_light.jpg","white_light.jpg","white_dark.jpg","white_dark.jpg","white_dark.jpg","white_dark.jpg","white_dark.jpg","white_dark.jpg","white_dark_dark.jpg","white_light_light.jpg","white_light_light.jpg","white_light_light.jpg"]
+/* Dice face filenames - these should exist in a 'dice/' folder next to the HTML */ 
+const diceFaces = { 
+  ability: ["green_blank.jpg","green_success.jpg","green_success.jpg","green_success_success.jpg","green_success_adv.jpg","green_advantage.jpg","green_advantage.jpg","green_advantage_advantage.jpg"], 
+  proficiency: ["yellow_blank.jpg","yellow_success.jpg","yellow_success.jpg","yellow_success_adv.jpg","yellow_success_adv.jpg","yellow_success_adv.jpg","yellow_success_success.jpg","yellow_success_success.jpg","yellow_advantage.jpg","yellow_advantage_adv.jpg","yellow_advantage_adv.jpg","yellow_triumph.jpg"], 
+  boost: ["blue_blank.jpg","blue_blank.jpg","blue_success.jpg","blue_success_adv.jpg","blue_advantage.jpg","blue_advantage_adv.jpg"], 
+  difficulty: ["purple_blank.jpg","purple_failure.jpg","purple_failure_failure.jpg","purple_failure_threat.jpg","purple_threat.jpg","purple_threat.jpg","purple_threat.jpg","purple_threat_threat.jpg"], 
+  challenge: ["red_blank.jpg","red_failure.jpg","red_failure.jpg","red_failure_failure.jpg","red_failure_failure.jpg","red_failure_threat.jpg","red_failure_threat.jpg","red_threat.jpg","red_threat.jpg","red_threat_threat.jpg","red_threat_threat.jpg","red_despair.jpg"], 
+  setback: ["black_blank.jpg","black_blank.jpg","black_failure.jpg","black_failure.jpg","black_threat.jpg","black_threat.jpg"], 
+  force: ["white_light.jpg","white_light.jpg","white_dark.jpg","white_dark.jpg","white_dark.jpg","white_dark.jpg","white_dark.jpg","white_dark.jpg","white_dark_dark.jpg","white_light_light.jpg","white_light_light.jpg","white_light_light.jpg"] 
 };
 
 /* ================= STATE ================= */
@@ -228,7 +229,7 @@ function renderSkills(skills){
       </div>
       <div style="display:flex;align-items:center;gap:8px">
         <input type="number" min="0" max="5" value="${rank}" data-skill="${skill}" style="width:52px"/>
-        <div class="skillDice"></div>
+        <div class="skillDice" title="Click to load dice pool"></div>
       </div>
     `;
 
@@ -251,6 +252,20 @@ function renderSkills(skills){
       upgrades--;
       diceDiv.appendChild(dot);
     }
+
+    // CLICK TO AUTO-FILL DICE POOL (Ability + Proficiency)
+    diceDiv.onclick = () => {
+      // FFG dice pool: proficiency = min(attribute, rank); ability = max(attribute, rank) - proficiency
+      const proficiencyDice = Math.min(attrValue, rank);
+      const abilityDice = Math.max(attrValue, rank) - proficiencyDice;
+
+      document.getElementById("diceAbility").value = abilityDice;
+      document.getElementById("diceProficiency").value = proficiencyDice;
+
+      // visual feedback: flash outline
+      diceDiv.style.boxShadow = "0 0 8px 2px rgba(68,215,255,0.18)";
+      setTimeout(()=>diceDiv.style.boxShadow = "", 300);
+    };
 
     skillList.appendChild(container);
   });
