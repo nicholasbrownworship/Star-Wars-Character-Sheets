@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>FFG Star Wars Character Tracker</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
 <style>
@@ -50,7 +50,7 @@ textarea{resize:vertical}
 .stat input{width:56px;text-align:center;font-size:16px;background:transparent;border:0;color:inherit}
 .skills{display:flex;flex-direction:column;gap:6px;max-height:400px;overflow-y:auto}
 .skill{display:flex;justify-content:space-between;align-items:center;padding:6px;border-radius:8px;background:var(--glass)}
-.skill .skillDice{display:flex;gap:4px;flex-wrap:wrap}
+.skill .skillDice{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
 .dice-dot{width:12px;height:12px;border-radius:50%;}
 .dice-dot.ability{background:#00ff66;}
 .dice-dot.proficiency{background:#ffe600;}
@@ -68,257 +68,423 @@ button:hover{background:rgba(68,215,255,0.08)}
 </head>
 <body>
 <div class="app">
-<aside class="panel datapad">
-<header>
-<div class="logo">SW</div>
-<div><h1>FFG Character Tracker</h1><div class="meta">Local-only · export/import JSON · printable</div></div>
-</header>
+  <aside class="panel datapad">
+    <header>
+      <div class="logo">SW</div>
+      <div><h1>FFG Character Tracker</h1><div class="meta">Local-only · export/import JSON · printable</div></div>
+    </header>
 
-<div class="controls" style="margin-top:12px">
-<button id="newBtn">New</button>
-<button id="duplicateBtn">Duplicate</button>
-<button id="deleteBtn">Delete</button>
-<button id="exportBtn">Export</button>
-<button id="importBtn">Import</button>
-<input id="importFile" type="file" accept="application/json" style="display:none" />
-</div>
+    <div class="controls" style="margin-top:12px">
+      <button id="newBtn">New</button>
+      <button id="duplicateBtn">Duplicate</button>
+      <button id="deleteBtn">Delete</button>
+      <button id="exportBtn">Export</button>
+      <button id="importBtn">Import</button>
+      <input id="importFile" type="file" accept="application/json" style="display:none" />
+    </div>
 
-<div class="character-list" id="charList"></div>
+    <div class="character-list" id="charList"></div>
 
-<div style="margin-top:12px;border-top:1px solid rgba(255,255,255,0.03);padding-top:12px">
-<div class="meta">Quick actions</div>
-<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
-<button id="seedBtn">Load Sample</button>
-<button id="clearAllBtn">Clear All</button>
-<button id="printBtn">Print Sheet</button>
-</div>
-</div>
-</aside>
+    <div style="margin-top:12px;border-top:1px solid rgba(255,255,255,0.03);padding-top:12px">
+      <div class="meta">Quick actions</div>
+      <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+        <button id="seedBtn">Load Sample</button>
+        <button id="clearAllBtn">Clear All</button>
+        <button id="printBtn">Print Sheet</button>
+      </div>
+    </div>
+  </aside>
 
-<main class="panel datapad">
-<div style="display:flex;justify-content:space-between;align-items:center">
-<div><div class="meta">Editing</div><div id="charNameDisplay" style="font-size:20px">— select a character —</div></div>
-<div class="actions"><button id="saveBtn">Save</button></div>
-</div>
+  <main class="panel datapad">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div><div class="meta">Editing</div><div id="charNameDisplay" style="font-size:20px">— select a character —</div></div>
+      <div class="actions"><button id="saveBtn">Save</button></div>
+    </div>
 
-<div id="editorForm" style="display:none" class="editor">
-<div class="row">
-<div class="col"><label>Name</label><input id="name" type="text" /></div>
-<div style="width:190px"><label>Species</label><input id="species" type="text" /></div>
-<div style="width:220px"><label>Career / Role</label><input id="career" type="text" /></div>
-</div>
+    <div id="editorForm" style="display:none" class="editor">
+      <div class="row">
+        <div class="col"><label>Name</label><input id="name" type="text" placeholder="Character name" /></div>
+        <div style="width:190px"><label>Species</label><input id="species" type="text" placeholder="Human / Twi'lek" /></div>
+        <div style="width:220px"><label>Career / Role</label><input id="career" type="text" placeholder="Smuggler / Bounty Hunter" /></div>
+      </div>
 
-<div><label>Motivation / Notes</label><textarea id="notes" rows="3"></textarea></div>
-<div><label>Characteristics</label><div class="stat-grid" id="stats"></div></div>
+      <div><label>Motivation / Notes</label><textarea id="notes" rows="3"></textarea></div>
 
-<div style="display:flex;gap:12px">
-<div style="flex:1"><label>Wounds</label><input id="wounds" type="number" min="0" /></div>
-<div style="flex:1"><label>Strain</label><input id="strain" type="number" min="0" /></div>
-<div style="flex:1"><label>Soak</label><input id="soak" type="number" min="0" /></div>
-<div style="flex:1"><label>Defense</label><input id="defense" type="number" min="0" /></div>
-</div>
+      <div><label>Characteristics</label><div class="stat-grid" id="stats"></div></div>
 
-<div><label>Gear / Equipment</label><input id="gear" type="text" /></div>
-<div><label>Skills</label><div class="skills" id="skillList"></div></div>
+      <div style="display:flex;gap:12px">
+        <div style="flex:1"><label>Wounds</label><input id="wounds" type="number" min="0" /></div>
+        <div style="flex:1"><label>Strain</label><input id="strain" type="number" min="0" /></div>
+        <div style="flex:1"><label>Soak</label><input id="soak" type="number" min="0" /></div>
+        <div style="flex:1"><label>Defense</label><input id="defense" type="number" min="0" /></div>
+      </div>
 
-<div class="dice-roller">
-<label>Dice Roller</label>
-<div class="dice-controls">
-<label>Ability<input type="number" min="0" id="diceAbility"></label>
-<label>Proficiency<input type="number" min="0" id="diceProficiency"></label>
-<label>Boost<input type="number" min="0" id="diceBoost"></label>
-<label>Difficulty<input type="number" min="0" id="diceDifficulty"></label>
-<label>Challenge<input type="number" min="0" id="diceChallenge"></label>
-<label>Setback<input type="number" min="0" id="diceSetback"></label>
-<label>Force<input type="number" min="0" id="diceForce"></label>
-</div>
-<div style="margin-top:6px">
-<button id="rollDiceBtn">Roll</button>
-<button id="clearDiceBtn">Clear</button>
-</div>
-<div class="dice-result" id="diceResult"></div>
-<div class="dice-result" id="netResult" style="margin-top:6px"></div>
-</div>
-</main>
+      <div><label>Gear / Equipment</label><input id="gear" type="text" placeholder="Blaster, Lightsaber, Armor..." /></div>
+
+      <div><label>Skills</label><div class="skills" id="skillList"></div></div>
+
+      <div class="dice-roller">
+        <label>Dice Roller</label>
+        <div class="dice-controls">
+          <label>Ability<input type="number" min="0" id="diceAbility"></label>
+          <label>Proficiency<input type="number" min="0" id="diceProficiency"></label>
+          <label>Boost<input type="number" min="0" id="diceBoost"></label>
+          <label>Difficulty<input type="number" min="0" id="diceDifficulty"></label>
+          <label>Challenge<input type="number" min="0" id="diceChallenge"></label>
+          <label>Setback<input type="number" min="0" id="diceSetback"></label>
+          <label>Force<input type="number" min="0" id="diceForce"></label>
+        </div>
+        <div style="margin-top:6px">
+          <button id="rollDiceBtn">Roll</button>
+          <button id="clearDiceBtn">Clear</button>
+        </div>
+        <div class="dice-result" id="diceResult"></div>
+        <div class="dice-result" id="netResult" style="margin-top:6px"></div>
+      </div>
+    </div>
+  </main>
 </div>
 
 <script>
-const ALL_SKILLS=["Astrogation","Athletics","Brawl","Computers","Coordination","Cool","Deception","Discipline","Leadership","Mechanics","Medicine","Negotiation","Perception","Piloting (Planetary)","Piloting (Space)","Resilience","Skulduggery","Stealth","Streetwise","Survival","Vigilance","Lightsaber"];
-const skillAttributes={
-  "Brawn":["Athletics","Brawl","Resilience"],
-  "Agility":["Piloting (Planetary)","Piloting (Space)","Coordination","Stealth"],
-  "Intellect":["Computers","Mechanics","Medicine","Astrogation"],
-  "Cunning":["Deception","Skulduggery","Streetwise","Survival"],
-  "Willpower":["Discipline","Leadership","Vigilance"],
-  "Presence":["Cool","Negotiation"]
+/* ================= STATIC DATA ================= */
+const ALL_SKILLS = [
+  "Astrogation","Athletics","Brawl","Computers","Coordination","Cool","Deception","Discipline",
+  "Leadership","Mechanics","Medicine","Negotiation","Perception","Piloting (Planetary)","Piloting (Space)",
+  "Resilience","Skulduggery","Stealth","Streetwise","Survival","Vigilance","Lightsaber"
+];
+
+// Full skill -> attribute mapping (covers every skill above)
+const skillAttributes = {
+  "Brawn": ["Athletics","Brawl","Resilience","Lightsaber"],
+  "Agility": ["Piloting (Planetary)","Piloting (Space)","Coordination","Stealth"],
+  "Intellect": ["Computers","Mechanics","Medicine","Astrogation","Perception"],
+  "Cunning": ["Deception","Skulduggery","Streetwise","Survival"],
+  "Willpower": ["Discipline","Vigilance"],
+  "Presence": ["Cool","Negotiation","Leadership"]
 };
 
-let characters=[],selectedIndex=null;
+/* Dice face filenames - these should exist in a 'dice/' folder next to the HTML */
+const diceFaces = {
+  ability: ["green_blank.jpg","green_success.jpg","green_success.jpg","green_success_success.jpg","green_success_adv.jpg","green_advantage.jpg","green_advantage.jpg","green_advantage_advantage.jpg"],
+  proficiency: ["yellow_blank.jpg","yellow_success.jpg","yellow_success.jpg","yellow_success_adv.jpg","yellow_success_adv.jpg","yellow_success_adv.jpg","yellow_success_success.jpg","yellow_success_success.jpg","yellow_advantage.jpg","yellow_advantage.jpg","yellow_advantage_adv.jpg","yellow_triumph.jpg"],
+  boost: ["blue_blank.jpg","blue_success.jpg","blue_success_adv.jpg","blue_advantage.jpg","blue_advantage.jpg","blue_advantage_advantage.jpg"],
+  difficulty: ["purple_blank.jpg","purple_failure.jpg","purple_failure.jpg","purple_failure_failure.jpg","purple_failure_threat.jpg","purple_threat.jpg","purple_threat.jpg","purple_threat_threat.jpg"],
+  challenge: ["red_blank.jpg","red_failure.jpg","red_failure.jpg","red_failure_failure.jpg","red_failure_failure.jpg","red_failure_threat.jpg","red_failure_threat.jpg","red_threat.jpg","red_threat.jpg","red_threat_threat.jpg","red_triumph.jpg","red_despair.jpg"],
+  setback: ["black_blank.jpg","black_failure.jpg","black_failure.jpg","black_threat.jpg","black_threat.jpg"],
+  force: ["white_blank.jpg","white_light.jpg","white_light.jpg","white_dark.jpg","white_dark.jpg"]
+};
 
-// ========== Local Storage ==========
-function saveToStorage(){localStorage.setItem("ffgChars",JSON.stringify(characters));}
-function loadFromStorage(){const d=localStorage.getItem("ffgChars");if(d)characters=JSON.parse(d);}
+/* ================= STATE ================= */
+let characters = [];
+let selectedIndex = null;
 
-// ========== UI Rendering ==========
+/* ================= STORAGE ================= */
+function saveToStorage(){ localStorage.setItem("ffgChars", JSON.stringify(characters)); }
+function loadFromStorage(){ const d = localStorage.getItem("ffgChars"); if(d) characters = JSON.parse(d); }
+
+/* ================= RENDERING ================= */
 function refreshCharList(){
-  const list=document.getElementById("charList");
-  list.innerHTML="";
+  const list = document.getElementById("charList");
+  list.innerHTML = "";
   characters.forEach((c,i)=>{
-    const div=document.createElement("div");
-    div.className="char-item"+(i===selectedIndex?" active":"");
-    div.textContent=c.name||"(Unnamed)";
-    div.onclick=()=>openCharacter(i);
+    const div = document.createElement("div");
+    div.className = "char-item" + (i === selectedIndex ? " active" : "");
+    div.textContent = c.name || "(Unnamed)";
+    div.onclick = () => openCharacter(i);
     list.appendChild(div);
   });
 }
+
 function renderStats(stats){
-  const statGrid=document.getElementById("stats");
-  statGrid.innerHTML="";
+  const statGrid = document.getElementById("stats");
+  statGrid.innerHTML = "";
   ["Brawn","Agility","Intellect","Cunning","Willpower","Presence"].forEach(s=>{
-    const div=document.createElement("div");
-    div.className="stat";
-    div.innerHTML=`<div>${s}</div><input type="number" min="0" value="${stats?.[s]||0}" data-stat="${s}"/>`;
-    statGrid.appendChild(div);
+    const wrapper = document.createElement("div");
+    wrapper.className = "stat";
+    wrapper.innerHTML = `<div>${s}</div><input type="number" min="0" value="${stats?.[s] || 0}" data-stat="${s}" />`;
+    statGrid.appendChild(wrapper);
   });
 }
+
 function renderSkills(skills){
-  const skillList=document.getElementById("skillList");
-  skillList.innerHTML="";
+  const skillList = document.getElementById("skillList");
+  skillList.innerHTML = "";
+
   ALL_SKILLS.forEach(skill=>{
-    if(!skills[skill])skills[skill]={rank:0};
-    const rank=skills[skill].rank||0;
-    const attr=Object.keys(skillAttributes).find(a=>skillAttributes[a].includes(skill));
-    const attrValue=(selectedIndex!==null && characters[selectedIndex].stats[attr])||0;
-    const div=document.createElement("div");
-    div.className="skill";
-    div.innerHTML=`
-      <span>${skill}</span>
-      <input type="number" min="0" max="5" value="${rank}" data-skill="${skill}" style="width:40px"/>
-      <div class="skillDice"></div>`;
-    const input=div.querySelector("input");
-    input.oninput=e=>{
-      const val=parseInt(e.target.value)||0;
-      skills[skill].rank=val;
+    if(!skills[skill]) skills[skill] = { rank: 0 };
+    const rank = skills[skill].rank || 0;
+
+    // find attribute for this skill
+    const attr = Object.keys(skillAttributes).find(a => skillAttributes[a].includes(skill));
+    const attrValue = (selectedIndex !== null && characters[selectedIndex] && characters[selectedIndex].stats && characters[selectedIndex].stats[attr]) ? characters[selectedIndex].stats[attr] : 0;
+
+    const container = document.createElement("div");
+    container.className = "skill";
+
+    container.innerHTML = `
+      <div style="display:flex;flex-direction:column;min-width:220px;">
+        <strong style="font-size:13px">${skill}</strong>
+        <span style="font-size:11px;color:var(--muted)">${attr || "—"}: ${attrValue} + Rank: ${rank}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <input type="number" min="0" max="5" value="${rank}" data-skill="${skill}" style="width:52px"/>
+        <div class="skillDice"></div>
+      </div>
+    `;
+
+    // rank input handling
+    const input = container.querySelector('input[data-skill]');
+    input.oninput = (e) => {
+      const v = parseInt(e.target.value) || 0;
+      skills[skill].rank = v;
       saveToStorage();
       renderSkills(skills);
     };
-    const diceDiv=div.querySelector(".skillDice");
-    let total=Math.max(rank,attrValue);
-    let upgrade=Math.min(rank,attrValue);
+
+    // dice dot visualization: up to max(attrValue, rank), with "upgrades" equal to min(attr, rank)
+    const diceDiv = container.querySelector(".skillDice");
+    let total = Math.max(rank, attrValue);
+    let upgrades = Math.min(rank, attrValue);
     for(let i=0;i<total;i++){
-      const dot=document.createElement("span");
-      dot.className="dice-dot "+(upgrade>0?"proficiency":"ability");
-      upgrade--;
+      const dot = document.createElement("span");
+      dot.className = "dice-dot " + (upgrades > 0 ? "proficiency" : "ability");
+      upgrades--;
       diceDiv.appendChild(dot);
     }
-    skillList.appendChild(div);
+
+    skillList.appendChild(container);
   });
 }
 
-// ========== Character Editing ==========
-function openCharacter(i){
-  selectedIndex=i;
-  const c=characters[i];
-  document.getElementById("editorForm").style.display="block";
-  document.getElementById("charNameDisplay").textContent=c.name;
-  document.getElementById("name").value=c.name;
-  document.getElementById("species").value=c.species;
-  document.getElementById("career").value=c.career;
-  document.getElementById("notes").value=c.notes||"";
-  document.getElementById("wounds").value=c.wounds||0;
-  document.getElementById("strain").value=c.strain||0;
-  document.getElementById("soak").value=c.soak||0;
-  document.getElementById("defense").value=c.defense||0;
-  document.getElementById("gear").value=c.gear||"";
-  renderStats(c.stats||{});
-  renderSkills(c.skills||{});
+/* ================= CHARACTER EDIT / OPEN ================= */
+function openCharacter(index){
+  selectedIndex = index;
+  const c = characters[index];
+  document.getElementById("editorForm").style.display = "block";
+  document.getElementById("charNameDisplay").textContent = c.name || "(Unnamed)";
+  document.getElementById("name").value = c.name || "";
+  document.getElementById("species").value = c.species || "";
+  document.getElementById("career").value = c.career || "";
+  document.getElementById("notes").value = c.notes || "";
+  document.getElementById("wounds").value = c.wounds || 0;
+  document.getElementById("strain").value = c.strain || 0;
+  document.getElementById("soak").value = c.soak || 0;
+  document.getElementById("defense").value = c.defense || 0;
+  document.getElementById("gear").value = c.gear || "";
+
+  // ensure stats object exists and fill missing attributes with 0
+  c.stats = c.stats || {};
+  ["Brawn","Agility","Intellect","Cunning","Willpower","Presence"].forEach(k=>{ if(typeof c.stats[k] !== 'number') c.stats[k] = 0; });
+
+  c.skills = c.skills || {};
+  renderStats(c.stats);
+  renderSkills(c.skills);
   refreshCharList();
 }
 
-document.getElementById("saveBtn").onclick=()=>{
-  if(selectedIndex===null)return;
-  const c=characters[selectedIndex];
-  c.name=document.getElementById("name").value;
-  c.species=document.getElementById("species").value;
-  c.career=document.getElementById("career").value;
-  c.notes=document.getElementById("notes").value;
-  c.wounds=+document.getElementById("wounds").value||0;
-  c.strain=+document.getElementById("strain").value||0;
-  c.soak=+document.getElementById("soak").value||0;
-  c.defense=+document.getElementById("defense").value||0;
-  c.gear=document.getElementById("gear").value;
-  c.stats={};
-  document.querySelectorAll("#stats input").forEach(i=>c.stats[i.dataset.stat]=+i.value||0);
+/* ================= SAVE ================= */
+document.getElementById("saveBtn").onclick = () => {
+  if(selectedIndex === null) return;
+  const c = characters[selectedIndex];
+  c.name = document.getElementById("name").value;
+  c.species = document.getElementById("species").value;
+  c.career = document.getElementById("career").value;
+  c.notes = document.getElementById("notes").value;
+  c.wounds = +document.getElementById("wounds").value || 0;
+  c.strain = +document.getElementById("strain").value || 0;
+  c.soak = +document.getElementById("soak").value || 0;
+  c.defense = +document.getElementById("defense").value || 0;
+  c.gear = document.getElementById("gear").value;
+
+  // stats
+  c.stats = {};
+  document.querySelectorAll("#stats input").forEach(i=> c.stats[i.dataset.stat] = +i.value || 0);
+
+  // skills are edited live (we already saved them on change)
   saveToStorage();
   refreshCharList();
 };
 
-// ========== Dice Roller ==========
-function rollDice(){
-  alert("Dice rolling works if images exist in /dice/ folder!");
+/* ================= DICE ROLLER (uses dice/ images) ================= */
+function rollDice() {
+  const counts = {
+    ability: +document.getElementById("diceAbility").value || 0,
+    proficiency: +document.getElementById("diceProficiency").value || 0,
+    boost: +document.getElementById("diceBoost").value || 0,
+    difficulty: +document.getElementById("diceDifficulty").value || 0,
+    challenge: +document.getElementById("diceChallenge").value || 0,
+    setback: +document.getElementById("diceSetback").value || 0,
+    force: +document.getElementById("diceForce").value || 0
+  };
+
+  const result = { success:0, advantage:0, failure:0, threat:0, triumph:0, despair:0, forceLight:0, forceDark:0 };
+  const resultDiv = document.getElementById("diceResult");
+  resultDiv.innerHTML = "";
+
+  function showFace(fname) {
+    const img = document.createElement("img");
+    img.src = "dice/" + fname;
+    img.style.width = "36px"; img.style.height = "36px"; img.style.margin = "2px";
+    img.dataset.face = fname;
+    img.onerror = function(){
+      // fallback emoji if image missing
+      const name = (this.dataset.face || "").toLowerCase();
+      const prefix = name.split("_")[0] || "";
+      const map = { green: "🟢", yellow: "🟡", purple: "🟣", red: "🔴", blue: "🔵", black: "⚫", white: "⚪" };
+      const span = document.createElement("span");
+      span.textContent = map[prefix] || "🎲";
+      span.style.fontSize = "20px"; span.style.margin = "6px";
+      this.replaceWith(span);
+    };
+    resultDiv.appendChild(img);
+  }
+
+  function pickFace(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+  Object.keys(counts).forEach(type => {
+    const num = counts[type];
+    if(!num) return;
+    for(let i=0;i<num;i++){
+      const face = pickFace(diceFaces[type]);
+      showFace(face);
+      const f = face.toLowerCase();
+
+      if(type === "ability"){
+        if(f.includes("success_success")) result.success += 2;
+        else if(f.includes("success_adv")) { result.success += 1; result.advantage += 1; }
+        else if(f.includes("success")) result.success += 1;
+
+        if(f.includes("advantage_advantage")) result.advantage += 2;
+        else if(f.includes("advantage")) result.advantage += 1;
+      }
+      else if(type === "proficiency"){
+        if(f.includes("triumph")) { result.triumph += 1; result.success += 1; }
+        if(f.includes("success_success")) result.success += 2;
+        else if(f.includes("success_adv")) { result.success += 1; result.advantage += 1; }
+        else if(f.includes("success")) result.success += 1;
+
+        if(f.includes("advantage_advantage")) result.advantage += 2;
+        else if(f.includes("advantage")) result.advantage += 1;
+      }
+      else if(type === "boost"){
+        if(f.includes("success_adv")) { result.success += 1; result.advantage += 1; }
+        else if(f.includes("success")) result.success += 1;
+
+        if(f.includes("advantage_advantage")) result.advantage += 2;
+        else if(f.includes("advantage")) result.advantage += 1;
+      }
+      else if(type === "difficulty"){
+        if(f.includes("failure_failure")) result.failure += 2;
+        else if(f.includes("failure")) result.failure += 1;
+
+        if(f.includes("threat_threat")) result.threat += 2;
+        else if(f.includes("threat")) result.threat += 1;
+      }
+      else if(type === "challenge"){
+        if(f.includes("despair")) { result.despair += 1; result.failure += 1; }
+        if(f.includes("triumph")) { result.triumph += 1; result.success += 1; }
+
+        if(f.includes("failure_failure")) result.failure += 2;
+        else if(f.includes("failure")) result.failure += 1;
+
+        if(f.includes("threat_threat")) result.threat += 2;
+        else if(f.includes("threat")) result.threat += 1;
+      }
+      else if(type === "setback"){
+        if(f.includes("failure")) result.failure += 1;
+        if(f.includes("threat")) result.threat += 1;
+      }
+      else if(type === "force"){
+        if(f.includes("light")) result.forceLight += 1;
+        if(f.includes("dark")) result.forceDark += 1;
+      }
+    }
+  });
+
+  const netSuccess = result.success - result.failure;
+  const netAdv = result.advantage - result.threat;
+  const netDiv = document.getElementById("netResult");
+  netDiv.innerHTML = `
+    <span class="${netSuccess>0?'net-positive':netSuccess<0?'net-negative':'net-neutral'}">Success: ${netSuccess}</span> &nbsp;
+    <span class="${netAdv>0?'net-positive':netAdv<0?'net-negative':'net-neutral'}">Advantage: ${netAdv}</span> &nbsp;
+    <span class="net-neutral">Triumph: ${result.triumph}</span> &nbsp;
+    <span class="net-neutral">Despair: ${result.despair}</span> &nbsp;
+    <span class="net-neutral">Force ▶︎ Light: ${result.forceLight} / Dark: ${result.forceDark}</span>
+  `;
 }
-document.getElementById("rollDiceBtn").onclick=rollDice;
-document.getElementById("clearDiceBtn").onclick=()=>{document.getElementById("diceResult").innerHTML="";document.getElementById("netResult").innerHTML="";};
 
-// ========== Utility Buttons ==========
-document.getElementById("newBtn").onclick=()=>{
-  const c={name:"New Character",species:"",career:"",notes:"",wounds:0,strain:0,soak:0,defense:0,gear:"",stats:{},skills:{}};
-  characters.push(c);
+/* ================= BUTTONS / UTILITIES ================= */
+document.getElementById("rollDiceBtn").onclick = rollDice;
+document.getElementById("clearDiceBtn").onclick = ()=>{ document.getElementById("diceResult").innerHTML = ""; document.getElementById("netResult").innerHTML = ""; };
+
+document.getElementById("newBtn").onclick = ()=>{
+  const baseStats = {Brawn:0,Agility:0,Intellect:0,Cunning:0,Willpower:0,Presence:0};
+  const c = { name:"New Character", species:"", career:"", notes:"", wounds:0, strain:0, soak:0, defense:0, gear:"", stats: {...baseStats}, skills:{} };
+  characters.push(c); saveToStorage(); refreshCharList();
+};
+
+document.getElementById("duplicateBtn").onclick = ()=>{
+  if(selectedIndex === null) return;
+  const copy = JSON.parse(JSON.stringify(characters[selectedIndex]));
+  copy.name = (copy.name || "Character") + " (Copy)";
+  characters.push(copy); saveToStorage(); refreshCharList();
+};
+
+document.getElementById("deleteBtn").onclick = ()=>{
+  if(selectedIndex === null) return;
+  if(!confirm("Delete this character?")) return;
+  characters.splice(selectedIndex, 1);
+  selectedIndex = null;
   saveToStorage();
   refreshCharList();
+  document.getElementById("editorForm").style.display = "none";
+  document.getElementById("charNameDisplay").textContent = "— select a character —";
 };
-document.getElementById("duplicateBtn").onclick=()=>{
-  if(selectedIndex===null)return;
-  const copy=JSON.parse(JSON.stringify(characters[selectedIndex]));
-  copy.name+=" (Copy)";
-  characters.push(copy);
-  saveToStorage();
-  refreshCharList();
+
+document.getElementById("exportBtn").onclick = ()=>{
+  const blob = new Blob([JSON.stringify(characters, null, 2)], { type: "application/json" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "characters.json"; a.click();
 };
-document.getElementById("deleteBtn").onclick=()=>{
-  if(selectedIndex===null)return;
-  characters.splice(selectedIndex,1);
-  selectedIndex=null;
-  saveToStorage();
-  refreshCharList();
-  document.getElementById("editorForm").style.display="none";
-  document.getElementById("charNameDisplay").textContent="— select a character —";
-};
-document.getElementById("exportBtn").onclick=()=>{
-  const blob=new Blob([JSON.stringify(characters,null,2)],{type:"application/json"});
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);
-  a.download="characters.json";
-  a.click();
-};
-document.getElementById("importBtn").onclick=()=>document.getElementById("importFile").click();
-document.getElementById("importFile").onchange=e=>{
-  const file=e.target.files[0];
-  if(!file)return;
-  const r=new FileReader();
-  r.onload=()=>{
-    characters=JSON.parse(r.result);
-    saveToStorage();
-    refreshCharList();
+
+document.getElementById("importBtn").onclick = ()=> document.getElementById("importFile").click();
+document.getElementById("importFile").onchange = e => {
+  const file = e.target.files[0];
+  if(!file) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const imported = JSON.parse(r.result || "[]");
+      if(Array.isArray(imported)) characters = imported;
+      else throw new Error("Invalid format");
+      saveToStorage(); refreshCharList();
+      selectedIndex = null;
+      document.getElementById("editorForm").style.display = "none";
+      document.getElementById("charNameDisplay").textContent = "— select a character —";
+    } catch(err) {
+      alert("Import failed: invalid JSON");
+    }
   };
   r.readAsText(file);
 };
-document.getElementById("seedBtn").onclick=()=>{
-  characters=[{
-    name:"Han Solo",species:"Human",career:"Smuggler",
+
+document.getElementById("seedBtn").onclick = ()=>{
+  characters = [{
+    name:"Han Solo", species:"Human", career:"Smuggler",
     notes:"Never tell me the odds.",
-    wounds:3,strain:2,soak:4,defense:1,gear:"DL-44, Millennium Falcon",
+    wounds:3, strain:2, soak:4, defense:1, gear:"DL-44, Millennium Falcon",
     stats:{Brawn:2,Agility:3,Intellect:2,Cunning:3,Willpower:2,Presence:3},
-    skills:{Piloting:{rank:2},Deception:{rank:1},Mechanics:{rank:1}}
+    skills:{ "Piloting (Space)":{rank:2}, Deception:{rank:1}, Mechanics:{rank:1} }
   }];
   saveToStorage(); refreshCharList();
 };
-document.getElementById("clearAllBtn").onclick=()=>{if(confirm("Clear all characters?")){characters=[];saveToStorage();refreshCharList();}};
-document.getElementById("printBtn").onclick=()=>window.print();
 
-// ========== INIT ==========
+document.getElementById("clearAllBtn").onclick = ()=>{ if(confirm("Clear all characters?")){ characters = []; saveToStorage(); refreshCharList(); } };
+document.getElementById("printBtn").onclick = ()=> window.print();
+
+/* ================= INIT ================= */
 loadFromStorage();
 refreshCharList();
+
 </script>
 </body>
 </html>
