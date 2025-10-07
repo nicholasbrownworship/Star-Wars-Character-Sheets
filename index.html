@@ -222,6 +222,7 @@ function renderSkills(skills){
     const container = document.createElement("div");
     container.className = "skill";
 
+    // set innerHTML for skill block
     container.innerHTML = `
       <div style="display:flex;flex-direction:column;min-width:220px;">
         <strong style="font-size:13px">${skill}</strong>
@@ -233,6 +234,20 @@ function renderSkills(skills){
       </div>
     `;
 
+    // CLICK ON SKILL NAME TO AUTO-FILL DICE POOL
+    const nameDiv = container.querySelector("strong");
+    nameDiv.onclick = () => {
+      const proficiencyDice = Math.min(attrValue, rank);
+      const abilityDice = Math.max(attrValue, rank) - proficiencyDice;
+
+      document.getElementById("diceAbility").value = abilityDice;
+      document.getElementById("diceProficiency").value = proficiencyDice;
+
+      // flash outline on the whole skill block for feedback
+      container.style.boxShadow = "0 0 8px 2px rgba(68,215,255,0.18)";
+      setTimeout(()=>container.style.boxShadow = "", 300);
+    };
+
     // rank input handling
     const input = container.querySelector('input[data-skill]');
     input.oninput = (e) => {
@@ -241,35 +256,6 @@ function renderSkills(skills){
       saveToStorage();
       renderSkills(skills);
     };
-
-    // dice dot visualization
-    const diceDiv = container.querySelector(".skillDice");
-    let total = Math.max(rank, attrValue);
-    let upgrades = Math.min(rank, attrValue);
-    for(let i=0;i<total;i++){
-      const dot = document.createElement("span");
-      dot.className = "dice-dot " + (upgrades > 0 ? "proficiency" : "ability");
-      upgrades--;
-      diceDiv.appendChild(dot);
-    }
-
-    // CLICK TO AUTO-FILL DICE POOL (Ability + Proficiency)
-    diceDiv.onclick = () => {
-      const proficiencyDice = Math.min(attrValue, rank);
-      const abilityDice = Math.max(attrValue, rank) - proficiencyDice;
-
-      document.getElementById("diceAbility").value = abilityDice;
-      document.getElementById("diceProficiency").value = proficiencyDice;
-
-      // visual feedback
-      diceDiv.style.boxShadow = "0 0 8px 2px rgba(68,215,255,0.18)";
-      setTimeout(()=>diceDiv.style.boxShadow = "", 300);
-    };
-
-    skillList.appendChild(container);
-  });
-}
-
 
     // dice dot visualization: up to max(attrValue, rank), with "upgrades" equal to min(attr, rank)
     const diceDiv = container.querySelector(".skillDice");
@@ -282,23 +268,23 @@ function renderSkills(skills){
       diceDiv.appendChild(dot);
     }
 
-    // CLICK TO AUTO-FILL DICE POOL (Ability + Proficiency)
+    // CLICK ON DICE DOTS TO AUTO-FILL DICE POOL
     diceDiv.onclick = () => {
-      // FFG dice pool: proficiency = min(attribute, rank); ability = max(attribute, rank) - proficiency
       const proficiencyDice = Math.min(attrValue, rank);
       const abilityDice = Math.max(attrValue, rank) - proficiencyDice;
 
       document.getElementById("diceAbility").value = abilityDice;
       document.getElementById("diceProficiency").value = proficiencyDice;
 
-      // visual feedback: flash outline
-      diceDiv.style.boxShadow = "0 0 8px 2px rgba(68,215,255,0.18)";
+      // visual feedback: flash outline on dots
+      diceDiv.style.boxShadow = "0 0 8px rgba(68,215,255,0.18)";
       setTimeout(()=>diceDiv.style.boxShadow = "", 300);
     };
 
     skillList.appendChild(container);
   });
 }
+
 
 /* ================= CHARACTER EDIT / OPEN ================= */
 function openCharacter(index){
