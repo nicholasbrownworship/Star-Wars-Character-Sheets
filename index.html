@@ -200,6 +200,26 @@ input[type=text]:focus, input[type=number]:focus, select:focus, textarea:focus{
   z-index: -2; /* behind panels and gradient overlay */
   background: black;
 }
+  
+/* 1. Ensure starfield canvas is in the back */
+#starfield {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1; /* behind everything */
+  pointer-events: none; /* allows clicks to pass through */
+}
+
+/* 2. Make skill list, dice roller, and panels appear above */
+.skills,
+.dice-roller,
+.panel {
+  position: relative;
+  z-index: 1; /* above the starfield */
+}
+
 
 </style>
 
