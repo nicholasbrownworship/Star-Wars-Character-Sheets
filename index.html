@@ -242,6 +242,35 @@ function renderSkills(skills){
       renderSkills(skills);
     };
 
+    // dice dot visualization
+    const diceDiv = container.querySelector(".skillDice");
+    let total = Math.max(rank, attrValue);
+    let upgrades = Math.min(rank, attrValue);
+    for(let i=0;i<total;i++){
+      const dot = document.createElement("span");
+      dot.className = "dice-dot " + (upgrades > 0 ? "proficiency" : "ability");
+      upgrades--;
+      diceDiv.appendChild(dot);
+    }
+
+    // CLICK TO AUTO-FILL DICE POOL (Ability + Proficiency)
+    diceDiv.onclick = () => {
+      const proficiencyDice = Math.min(attrValue, rank);
+      const abilityDice = Math.max(attrValue, rank) - proficiencyDice;
+
+      document.getElementById("diceAbility").value = abilityDice;
+      document.getElementById("diceProficiency").value = proficiencyDice;
+
+      // visual feedback
+      diceDiv.style.boxShadow = "0 0 8px 2px rgba(68,215,255,0.18)";
+      setTimeout(()=>diceDiv.style.boxShadow = "", 300);
+    };
+
+    skillList.appendChild(container);
+  });
+}
+
+
     // dice dot visualization: up to max(attrValue, rank), with "upgrades" equal to min(attr, rank)
     const diceDiv = container.querySelector(".skillDice");
     let total = Math.max(rank, attrValue);
