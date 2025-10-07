@@ -7,150 +7,190 @@
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg-overlay: rgba(0,0,0,0.55);
-  --panel: rgba(15,25,40,0.75);
-  --accent: #44d7ff;
-  --muted: #a0a8b8;
-  --glass: rgba(255,255,255,0.04);
-  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  --bg-overlay: rgba(0,0,0,0.6);
+  --panel: rgba(5,10,20,0.85);
+  --accent: #00ffe6; /* neon blue-green like Star Wars tech */
+  --highlight: #ffcc00; /* yellow accent for selected items */
+  --muted: #7f8c99;
+  --glass: rgba(255,255,255,0.02);
+  font-family: 'Orbitron', 'Inter', sans-serif;
 }
-html,body{height:100%;margin:0}
-body{
+
+html, body {height:100%; margin:0;}
+body {
   background: url('4107909.jpg') no-repeat center center fixed;
   background-size: cover;
   color:#e6eef8;
-  min-height:100vh;
-  backdrop-filter: blur(2px);
 }
 body::before{
   content:""; position:fixed; inset:0;
-  background:linear-gradient(180deg, rgba(0,0,0,0.45), rgba(0,0,0,0.65));
+  background: radial-gradient(circle at top left, rgba(0,0,0,0.25), rgba(0,0,0,0.85));
   z-index:-1;
 }
+
 .app{
   display:grid;
   grid-template-columns:320px 1fr;
   gap:20px;
   height:100vh;
-  padding:24px;
+  padding:20px;
   align-items:start;
 }
+
+/* PANEL STYLE */
 .panel{
   background: var(--panel);
   border-radius:16px;
-  padding:18px;
-  box-shadow:0 12px 32px rgba(0,0,0,0.6), 0 0 8px rgba(68,215,255,0.08);
-  border:1px solid rgba(68,215,255,0.12);
-  backdrop-filter: blur(6px);
-}
-aside.panel{height:calc(100vh - 48px);overflow:auto}
-main.panel{height:calc(100vh - 48px);overflow:auto;position:relative}
-.datapad{
-  background: linear-gradient(180deg, rgba(10,20,30,0.85), rgba(12,18,28,0.65));
-  border:1px solid rgba(68,215,255,0.08);
-  box-shadow:0 8px 28px rgba(0,120,160,0.16);
-  border-radius:20px;
   padding:20px;
+  box-shadow: 0 0 12px rgba(0,255,230,0.25), inset 0 0 6px rgba(0,255,230,0.15);
+  border:1px solid rgba(0,255,230,0.2);
 }
-header{display:flex;gap:14px;align-items:center}
+
+/* DATAPAD HEADER */
+header{display:flex; gap:14px; align-items:center;}
 header .logo{
-  width:56px;height:56px;
-  border-radius:10px;
-  background:linear-gradient(135deg,var(--accent),#8a6b44);
-  display:flex;align-items:center;justify-content:center;
-  font-weight:700;font-family:'Orbitron',sans-serif;color:#021;
-  box-shadow:0 6px 18px rgba(68,215,255,0.12);
-  text-shadow:0 0 4px rgba(0,0,0,0.3);
+  width:56px; height:56px;
+  border-radius:8px;
+  background: linear-gradient(135deg, var(--accent), #008080);
+  display:flex; justify-content:center; align-items:center;
+  font-weight:700; color:#001; font-family:'Orbitron', sans-serif;
+  text-shadow:0 0 6px rgba(0,255,230,0.8);
 }
-h1{margin:0;font-size:18px;font-weight:600}
-.meta{font-size:12px;color:var(--muted)}
-.character-list{margin-top:14px}
+h1{margin:0;font-size:18px;font-weight:700;}
+.meta{font-size:12px;color:var(--muted); text-transform: uppercase;}
+
+.character-list{
+  margin-top:12px;
+  border-top:1px solid rgba(255,255,255,0.05);
+  padding-top:10px;
+}
+
 .char-item{
-  display:flex;justify-content:space-between;align-items:center;
-  padding:12px;border-radius:12px;
-  background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-  margin-bottom:10px;cursor:pointer;
+  display:flex; justify-content:space-between; align-items:center;
+  padding:12px; border-radius:10px;
+  background: rgba(0,255,230,0.02);
+  margin-bottom:8px;
+  cursor:pointer;
   transition: all 0.25s;
+  border:1px solid rgba(0,255,230,0.1);
 }
 .char-item:hover{
-  background:linear-gradient(180deg, rgba(68,215,255,0.04), rgba(68,215,255,0.02));
-  transform:scale(1.03);
-  box-shadow:0 0 8px rgba(68,215,255,0.12);
+  background: rgba(0,255,230,0.08);
+  box-shadow: 0 0 8px rgba(0,255,230,0.4);
 }
 .char-item.active{
-  outline:2px solid rgba(68,215,255,0.12);
+  outline:2px solid var(--highlight);
+  box-shadow: 0 0 10px var(--highlight);
 }
-.editor{display:flex;flex-direction:column;gap:14px}
-.row{display:flex;gap:14px}
-.col{flex:1}
-label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px;font-weight:500}
+
+/* FORM ELEMENTS */
 input[type=text], input[type=number], select, textarea{
   width:100%;
   padding:10px;
-  border-radius:10px;
-  border:1px solid rgba(255,255,255,0.06);
-  background:rgba(0,0,0,0.24);
+  border-radius:8px;
+  border:1px solid rgba(0,255,230,0.15);
+  background: rgba(0,0,0,0.2);
   color:inherit;
   font-size:14px;
+  transition: all 0.25s;
 }
-textarea{resize:vertical}
+input[type=text]:focus, input[type=number]:focus, select:focus, textarea:focus{
+  border-color: var(--accent);
+  box-shadow: 0 0 6px rgba(0,255,230,0.6);
+  outline:none;
+}
+
+/* STATS AND SKILLS */
 .stat-grid{
   display:grid;
   grid-template-columns:repeat(6,1fr);
   gap:10px;
-  margin-top:10px;
+  margin-top:8px;
 }
 .stat{
   padding:10px;
-  border-radius:10px;
-  background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border-radius:8px;
+  background: rgba(0,255,230,0.02);
   text-align:center;
+  border:1px solid rgba(0,255,230,0.1);
 }
-.stat input{width:60px;text-align:center;font-size:16px;background:transparent;border:0;color:inherit}
-.skills{display:flex;flex-direction:column;gap:8px;max-height:420px;overflow-y:auto}
+.stat input{width:60px; text-align:center; font-size:16px; background:transparent; border:0; color:inherit;}
+
+.skills{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  max-height:400px;
+  overflow-y:auto;
+}
 .skill{
-  display:flex;justify-content:space-between;align-items:center;
-  padding:8px;border-radius:10px;background:var(--glass);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:8px;
+  border-radius:8px;
+  background: rgba(0,255,230,0.02);
+  border:1px solid rgba(0,255,230,0.1);
 }
 .skill .skillDice{
-  display:flex;gap:5px;flex-wrap:wrap;align-items:center;
-  cursor:pointer;padding:5px;border-radius:8px;
+  display:flex;
+  gap:5px;
+  flex-wrap:wrap;
+  align-items:center;
+  cursor:pointer;
+  padding:4px;
+  border-radius:6px;
   transition: all 0.2s;
 }
-.skill .skillDice:hover{box-shadow:0 0 10px rgba(68,215,255,0.16)}
-.dice-dot{width:14px;height:14px;border-radius:50%;box-shadow:0 0 2px rgba(0,0,0,0.4);}
-.dice-dot.ability{background:#00ff66;}
-.dice-dot.proficiency{background:#ffe600;}
+.skill .skillDice:hover{
+  box-shadow: 0 0 10px rgba(0,255,230,0.3);
+}
+
+/* DICE ROLLER */
 .dice-roller{
-  margin-top:10px;
-  padding:14px;
-  background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-  border-radius:10px;
+  margin-top:12px;
+  padding:12px;
+  background: rgba(0,255,230,0.02);
+  border-radius:8px;
+  border:1px solid rgba(0,255,230,0.1);
 }
-.dice-controls{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
-.dice-controls label{display:flex;flex-direction:column;align-items:center;font-size:12px}
+.dice-controls label{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  font-size:12px;
+  color: var(--muted);
+}
 .dice-result{
-  background:rgba(0,0,0,0.25);
-  padding:12px;border-radius:10px;
-  min-height:48px;display:flex;flex-wrap:wrap;gap:4px;align-items:center;
+  background: rgba(0,0,0,0.25);
+  padding:10px;
+  border-radius:8px;
+  min-height:48px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:4px;
+  align-items:center;
+  border:1px solid rgba(0,255,230,0.1);
 }
-.actions{display:flex;gap:10px;flex-wrap:wrap}
-button{
+
+.actions button{
   background:transparent;
-  border:1px solid rgba(255,255,255,0.08);
+  border:1px solid rgba(0,255,230,0.15);
   padding:8px 12px;
-  border-radius:10px;
+  border-radius:8px;
   color:inherit;
   cursor:pointer;
   transition: all 0.25s;
   font-weight:500;
 }
-button:hover{
-  background:rgba(68,215,255,0.12);
-  box-shadow:0 0 8px rgba(68,215,255,0.18);
+.actions button:hover{
+  background: rgba(0,255,230,0.12);
+  box-shadow: 0 0 8px rgba(0,255,230,0.4);
 }
-.net-positive{color:#4fff4f;font-weight:700}
-.net-negative{color:#ff4f4f;font-weight:700}
+
+/* NET RESULT COLORS */
+.net-positive{color:#00ff66;font-weight:700}
+.net-negative{color:#ff4444;font-weight:700}
 .net-neutral{color:#ffffff;font-weight:700}
 </style>
 
