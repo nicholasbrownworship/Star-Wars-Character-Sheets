@@ -51,7 +51,6 @@ textarea{resize:vertical}
 .skills{display:flex;flex-direction:column;gap:6px;max-height:400px;overflow-y:auto}
 .skill{display:flex;justify-content:space-between;align-items:center;padding:6px;border-radius:8px;background:var(--glass)}
 .skill .skillDice{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
-.skill-name{cursor:pointer;text-decoration:underline}
 .dice-dot{width:12px;height:12px;border-radius:50%;}
 .dice-dot.ability{background:#00ff66;}
 .dice-dot.proficiency{background:#ffe600;}
@@ -163,11 +162,11 @@ const skillAttributes = {
   "Presence": ["Cool","Negotiation","Leadership"]
 };
 
-/* Dice face filenames */
+/* Dice face filenames - these should exist in a 'dice/' folder next to the HTML */
 const diceFaces = { 
   ability: ["green_blank.jpg","green_success.jpg","green_success.jpg","green_success_success.jpg","green_success_adv.jpg","green_advantage.jpg","green_advantage.jpg","green_advantage_advantage.jpg"], 
-  proficiency: ["yellow_blank.jpg","yellow_success.jpg","yellow_success.jpg","yellow_success_adv.jpg","yellow_success_adv.jpg","yellow_success_adv.jpg","yellow_success_success.jpg","yellow_success_success.jpg","yellow_advantage.jpg","yellow_advantage.jpg","yellow_advantage_adv.jpg","yellow_triumph.jpg"], 
-  boost: ["blue_blank.jpg","blue_blank.jpg","blue_success.jpg","blue_success_adv.jpg","blue_advantage.jpg","blue_advantage_adv.jpg"], 
+  proficiency: ["yellow_blank.jpg","yellow_success.jpg","yellow_success.jpg","yellow_success_adv.jpg","yellow_success_adv.jpg","yellow_success_adv.jpg","yellow_success_success.jpg","yellow_success_success.jpg","yellow_advantage.jpg","yellow_advantage.jpg","yellow_advantage.jpg","yellow_triumph.jpg"], 
+  boost: ["blue_blank.jpg","blue_blank.jpg","blue_success.jpg","blue_success_adv.jpg","blue_advantage.jpg","blue_advantage.jpg"], 
   difficulty: ["purple_blank.jpg","purple_failure.jpg","purple_failure_failure.jpg","purple_failure_threat.jpg","purple_threat.jpg","purple_threat.jpg","purple_threat.jpg","purple_threat_threat.jpg"], 
   challenge: ["red_blank.jpg","red_failure.jpg","red_failure.jpg","red_failure_failure.jpg","red_failure_failure.jpg","red_failure_threat.jpg","red_failure_threat.jpg","red_threat.jpg","red_threat.jpg","red_threat_threat.jpg","red_threat_threat.jpg","red_despair.jpg"], 
   setback: ["black_blank.jpg","black_blank.jpg","black_failure.jpg","black_failure.jpg","black_threat.jpg","black_threat.jpg"], 
@@ -213,16 +212,14 @@ function renderSkills(skills){
   ALL_SKILLS.forEach(skill=>{
     if(!skills[skill]) skills[skill] = { rank: 0 };
     const rank = skills[skill].rank || 0;
-
     const attr = Object.keys(skillAttributes).find(a => skillAttributes[a].includes(skill));
     const attrValue = (selectedIndex !== null && characters[selectedIndex] && characters[selectedIndex].stats && characters[selectedIndex].stats[attr]) ? characters[selectedIndex].stats[attr] : 0;
 
     const container = document.createElement("div");
     container.className = "skill";
-
     container.innerHTML = `
       <div style="display:flex;flex-direction:column;min-width:220px;">
-        <strong class="skill-name" style="font-size:13px">${skill}</strong>
+        <strong style="font-size:13px">${skill}</strong>
         <span style="font-size:11px;color:var(--muted)">${attr || "—"}: ${attrValue} + Rank: ${rank}</span>
       </div>
       <div style="display:flex;align-items:center;gap:8px">
@@ -230,7 +227,6 @@ function renderSkills(skills){
         <div class="skillDice"></div>
       </div>
     `;
-
     const input = container.querySelector('input[data-skill]');
     input.oninput = (e) => {
       const v = parseInt(e.target.value) || 0;
@@ -248,17 +244,7 @@ function renderSkills(skills){
       upgrades--;
       diceDiv.appendChild(dot);
     }
-
     skillList.appendChild(container);
-
-    // === CLICK SKILL TO POPULATE DICE ===
-    const skillNameElem = container.querySelector(".skill-name");
-    skillNameElem.onclick = () => {
-      const ability = Math.max(rank, attrValue) - Math.min(rank, attrValue);
-      const proficiency = Math.min(rank, attrValue);
-      document.getElementById("diceAbility").value = ability;
-      document.getElementById("diceProficiency").value = proficiency;
-    };
   });
 }
 
@@ -277,31 +263,88 @@ function openCharacter(index){
   document.getElementById("soak").value = c.soak || 0;
   document.getElementById("defense").value = c.defense || 0;
   document.getElementById("gear").value = c.gear || "";
-  renderStats(c.stats || {});
-  renderSkills(c.skills || {});
+
+  c.stats = c.stats || {};
+  ["Brawn","Agility","Intellect","Cunning","Willpower","Presence"].forEach(k=>{ if(typeof c.stats[k] !== 'number') c.stats[k] = 0; });
+
+  c.skills = c.skills || {};
+  renderStats(c.stats);
+  renderSkills(c.skills);
   refreshCharList();
 }
 
-/* ================= SAVE ================= */
-document.getElementById("saveBtn").onclick = () => {
-  if(selectedIndex === null) return;
-  const c = characters[selectedIndex];
-  c.name = document.getElementById("name").value;
-  c.species = document.getElementById("species").value;
-  c.career = document.getElementById("career").value;
-  c.notes = document.getElementById("notes").value;
-  c.wounds = parseInt(document.getElementById("wounds").value)||0;
-  c.strain = parseInt(document.getElementById("strain").value)||0;
-  c.soak = parseInt(document.getElementById("soak").value)||0;
-  c.defense = parseInt(document.getElementById("defense").value)||0;
-  c.gear = document.getElementById("gear").value;
-  c.stats = {};
-  document.querySelectorAll("#stats input").forEach(i=>c.stats[i.dataset.stat] = parseInt(i.value)||0);
+/* ================= EVENTS ================= */
+document.getElementById("newBtn").onclick = ()=>{
+  const newChar = { name:"", stats:{}, skills:{} };
+  characters.push(newChar);
+  saveToStorage();
+  refreshCharList();
+  openCharacter(characters.length-1);
+};
+document.getElementById("duplicateBtn").onclick = ()=>{
+  if(selectedIndex!==null){
+    const copy = JSON.parse(JSON.stringify(characters[selectedIndex]));
+    characters.push(copy);
+    saveToStorage();
+    refreshCharList();
+  }
+};
+document.getElementById("deleteBtn").onclick = ()=>{
+  if(selectedIndex!==null){
+    characters.splice(selectedIndex,1);
+    selectedIndex=null;
+    saveToStorage();
+    refreshCharList();
+    document.getElementById("editorForm").style.display="none";
+  }
+};
+document.getElementById("saveBtn").onclick = ()=>{
+  if(selectedIndex!==null){
+    const c = characters[selectedIndex];
+    c.name=document.getElementById("name").value;
+    c.species=document.getElementById("species").value;
+    c.career=document.getElementById("career").value;
+    c.notes=document.getElementById("notes").value;
+    c.wounds=parseInt(document.getElementById("wounds").value)||0;
+    c.strain=parseInt(document.getElementById("strain").value)||0;
+    c.soak=parseInt(document.getElementById("soak").value)||0;
+    c.defense=parseInt(document.getElementById("defense").value)||0;
+    c.gear=document.getElementById("gear").value;
+    saveToStorage();
+    refreshCharList();
+  }
+};
+document.getElementById("exportBtn").onclick = ()=>{
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(characters));
+  const dlAnchor = document.createElement("a");
+  dlAnchor.href = dataStr;
+  dlAnchor.download = "characters.json";
+  dlAnchor.click();
+};
+document.getElementById("importBtn").onclick = ()=>{ document.getElementById("importFile").click(); };
+document.getElementById("importFile").onchange = (e)=>{
+  const file = e.target.files[0];
+  const reader = new FileReader();
+  reader.onload = (ev)=>{
+    try{
+      characters = JSON.parse(ev.target.result);
+      selectedIndex=null;
+      saveToStorage();
+      refreshCharList();
+      document.getElementById("editorForm").style.display="none";
+    }catch(err){ alert("Invalid JSON"); }
+  };
+  reader.readAsText(file);
+};
+document.getElementById("seedBtn").onclick = ()=>{
+  characters=[{name:"Luke Skywalker",stats:{Brawn:2,Agility:3,Intellect:3,Cunning:2,Willpower:3,Presence:3},skills:{Athletics:{rank:2},Piloting:{rank:3}}}];
   saveToStorage();
   refreshCharList();
 };
+document.getElementById("clearAllBtn").onclick = ()=>{ characters=[]; selectedIndex=null; saveToStorage(); refreshCharList(); document.getElementById("editorForm").style.display="none"; };
+document.getElementById("printBtn").onclick = ()=>{ window.print(); };
 
-/* ================= INITIALIZE ================= */
+/* ================= INIT ================= */
 loadFromStorage();
 refreshCharList();
 </script>
