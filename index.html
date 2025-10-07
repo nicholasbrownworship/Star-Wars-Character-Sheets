@@ -451,7 +451,16 @@ netDiv.innerHTML = `
 
 /* ================= BUTTONS / UTILITIES ================= */
 document.getElementById("rollDiceBtn").onclick = rollDice;
-document.getElementById("clearDiceBtn").onclick = ()=>{ document.getElementById("diceResult").innerHTML = ""; document.getElementById("netResult").innerHTML = ""; };
+document.getElementById("clearDiceBtn").onclick = () => {
+  // Clear dice result displays
+  document.getElementById("diceResult").innerHTML = "";
+  document.getElementById("netResult").innerHTML = "";
+
+  // Clear all dice input fields
+  const diceInputs = ["diceAbility","diceProficiency","diceBoost","diceDifficulty","diceChallenge","diceSetback","diceForce"];
+  diceInputs.forEach(id => document.getElementById(id).value = 0);
+};
+
   // Increment negative dice buttons
 document.querySelectorAll(".negativeDiceBtn").forEach(btn => {
   btn.onclick = () => {
