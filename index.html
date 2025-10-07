@@ -38,12 +38,15 @@ body::before{
 }
 
 /* PANEL STYLE */
-.panel{
-  background: var(--panel);
-  border-radius:16px;
-  padding:20px;
-  box-shadow: 0 0 12px rgba(0,255,230,0.25), inset 0 0 6px rgba(0,255,230,0.15);
-  border:1px solid rgba(0,255,230,0.2);
+.panel {
+  background: rgba(20, 20, 30, 0.85); /* darker, slightly translucent */
+  backdrop-filter: blur(6px);         /* frosted glass effect */
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow:
+    inset 0 0 12px rgba(0,0,0,0.3),    /* inner shadow for depth */
+    0 4px 20px rgba(0,0,0,0.4);        /* outer shadow for floating effect */
+  border: 1px solid rgba(100, 200, 255, 0.15); /* subtle edge glow */
 }
 
 /* DATAPAD HEADER */
