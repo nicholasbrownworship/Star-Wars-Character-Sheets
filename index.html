@@ -148,18 +148,17 @@ input[type=text]:focus, input[type=number]:focus, select:focus, textarea:focus{
 
 /* Dice dots for skill preview */
 .dice-dot {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   display: inline-block;
+  margin: 2px;
+  background-color: #555; /* fallback dark gray */
+  box-shadow: inset 0 0 2px rgba(0,0,0,0.5); /* subtle depth */
 }
 
-.dice-dot.ability {
-  background-color: #00ff66; /* green for ability */
-}
-
-.dice-dot.proficiency {
-  background-color: #ffe600; /* yellow for proficiency */
+.dice-dot.ability { background-color: #2a7b5f; }       /* dark green */
+.dice-dot.proficiency { background-color: #8b7c3d; }   /* muted yellow */
 }
 
 
