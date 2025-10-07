@@ -50,7 +50,8 @@ textarea{resize:vertical}
 .stat input{width:56px;text-align:center;font-size:16px;background:transparent;border:0;color:inherit}
 .skills{display:flex;flex-direction:column;gap:6px;max-height:400px;overflow-y:auto}
 .skill{display:flex;justify-content:space-between;align-items:center;padding:6px;border-radius:8px;background:var(--glass)}
-.skill .skillDice{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+.skill .skillDice{display:flex;gap:4px;flex-wrap:wrap;align-items:center;cursor:pointer;padding:4px;border-radius:6px}
+.skill .skillDice:hover{box-shadow:0 0 8px rgba(68,215,255,0.08)}
 .dice-dot{width:12px;height:12px;border-radius:50%;}
 .dice-dot.ability{background:#00ff66;}
 .dice-dot.proficiency{background:#ffe600;}
@@ -153,6 +154,7 @@ const ALL_SKILLS = [
   "Resilience","Skulduggery","Stealth","Streetwise","Survival","Vigilance","Lightsaber"
 ];
 
+// Full skill -> attribute mapping (covers every skill above)
 const skillAttributes = {
   "Brawn": ["Athletics","Brawl","Resilience","Lightsaber"],
   "Agility": ["Piloting (Planetary)","Piloting (Space)","Coordination","Stealth"],
@@ -162,11 +164,11 @@ const skillAttributes = {
   "Presence": ["Cool","Negotiation","Leadership"]
 };
 
-/* Dice face filenames - these should exist in a 'dice/' folder next to the HTML */
+/* Dice face filenames - these should exist in a 'dice/' folder next to the HTML */ 
 const diceFaces = { 
   ability: ["green_blank.jpg","green_success.jpg","green_success.jpg","green_success_success.jpg","green_success_adv.jpg","green_advantage.jpg","green_advantage.jpg","green_advantage_advantage.jpg"], 
-  proficiency: ["yellow_blank.jpg","yellow_success.jpg","yellow_success.jpg","yellow_success_adv.jpg","yellow_success_adv.jpg","yellow_success_adv.jpg","yellow_success_success.jpg","yellow_success_success.jpg","yellow_advantage.jpg","yellow_advantage.jpg","yellow_advantage.jpg","yellow_triumph.jpg"], 
-  boost: ["blue_blank.jpg","blue_blank.jpg","blue_success.jpg","blue_success_adv.jpg","blue_advantage.jpg","blue_advantage.jpg"], 
+  proficiency: ["yellow_blank.jpg","yellow_success.jpg","yellow_success.jpg","yellow_success_adv.jpg","yellow_success_adv.jpg","yellow_success_adv.jpg","yellow_success_success.jpg","yellow_success_success.jpg","yellow_advantage.jpg","yellow_advantage_adv.jpg","yellow_advantage_adv.jpg","yellow_triumph.jpg"], 
+  boost: ["blue_blank.jpg","blue_blank.jpg","blue_success.jpg","blue_success_adv.jpg","blue_advantage.jpg","blue_advantage_adv.jpg"], 
   difficulty: ["purple_blank.jpg","purple_failure.jpg","purple_failure_failure.jpg","purple_failure_threat.jpg","purple_threat.jpg","purple_threat.jpg","purple_threat.jpg","purple_threat_threat.jpg"], 
   challenge: ["red_blank.jpg","red_failure.jpg","red_failure.jpg","red_failure_failure.jpg","red_failure_failure.jpg","red_failure_threat.jpg","red_failure_threat.jpg","red_threat.jpg","red_threat.jpg","red_threat_threat.jpg","red_threat_threat.jpg","red_despair.jpg"], 
   setback: ["black_blank.jpg","black_blank.jpg","black_failure.jpg","black_failure.jpg","black_threat.jpg","black_threat.jpg"], 
@@ -212,11 +214,14 @@ function renderSkills(skills){
   ALL_SKILLS.forEach(skill=>{
     if(!skills[skill]) skills[skill] = { rank: 0 };
     const rank = skills[skill].rank || 0;
+
+    // find attribute for this skill
     const attr = Object.keys(skillAttributes).find(a => skillAttributes[a].includes(skill));
     const attrValue = (selectedIndex !== null && characters[selectedIndex] && characters[selectedIndex].stats && characters[selectedIndex].stats[attr]) ? characters[selectedIndex].stats[attr] : 0;
 
     const container = document.createElement("div");
     container.className = "skill";
+
     container.innerHTML = `
       <div style="display:flex;flex-direction:column;min-width:220px;">
         <strong style="font-size:13px">${skill}</strong>
@@ -224,9 +229,11 @@ function renderSkills(skills){
       </div>
       <div style="display:flex;align-items:center;gap:8px">
         <input type="number" min="0" max="5" value="${rank}" data-skill="${skill}" style="width:52px"/>
-        <div class="skillDice"></div>
+        <div class="skillDice" title="Click to load dice pool"></div>
       </div>
     `;
+
+    // rank input handling
     const input = container.querySelector('input[data-skill]');
     input.oninput = (e) => {
       const v = parseInt(e.target.value) || 0;
@@ -235,6 +242,7 @@ function renderSkills(skills){
       renderSkills(skills);
     };
 
+    // dice dot visualization: up to max(attrValue, rank), with "upgrades" equal to min(attr, rank)
     const diceDiv = container.querySelector(".skillDice");
     let total = Math.max(rank, attrValue);
     let upgrades = Math.min(rank, attrValue);
@@ -244,6 +252,21 @@ function renderSkills(skills){
       upgrades--;
       diceDiv.appendChild(dot);
     }
+
+    // CLICK TO AUTO-FILL DICE POOL (Ability + Proficiency)
+    diceDiv.onclick = () => {
+      // FFG dice pool: proficiency = min(attribute, rank); ability = max(attribute, rank) - proficiency
+      const proficiencyDice = Math.min(attrValue, rank);
+      const abilityDice = Math.max(attrValue, rank) - proficiencyDice;
+
+      document.getElementById("diceAbility").value = abilityDice;
+      document.getElementById("diceProficiency").value = proficiencyDice;
+
+      // visual feedback: flash outline
+      diceDiv.style.boxShadow = "0 0 8px 2px rgba(68,215,255,0.18)";
+      setTimeout(()=>diceDiv.style.boxShadow = "", 300);
+    };
+
     skillList.appendChild(container);
   });
 }
@@ -264,6 +287,7 @@ function openCharacter(index){
   document.getElementById("defense").value = c.defense || 0;
   document.getElementById("gear").value = c.gear || "";
 
+  // ensure stats object exists and fill missing attributes with 0
   c.stats = c.stats || {};
   ["Brawn","Agility","Intellect","Cunning","Willpower","Presence"].forEach(k=>{ if(typeof c.stats[k] !== 'number') c.stats[k] = 0; });
 
@@ -273,80 +297,209 @@ function openCharacter(index){
   refreshCharList();
 }
 
-/* ================= EVENTS ================= */
-document.getElementById("newBtn").onclick = ()=>{
-  const newChar = { name:"", stats:{}, skills:{} };
-  characters.push(newChar);
+/* ================= SAVE ================= */
+document.getElementById("saveBtn").onclick = () => {
+  if(selectedIndex === null) return;
+  const c = characters[selectedIndex];
+  c.name = document.getElementById("name").value;
+  c.species = document.getElementById("species").value;
+  c.career = document.getElementById("career").value;
+  c.notes = document.getElementById("notes").value;
+  c.wounds = +document.getElementById("wounds").value || 0;
+  c.strain = +document.getElementById("strain").value || 0;
+  c.soak = +document.getElementById("soak").value || 0;
+  c.defense = +document.getElementById("defense").value || 0;
+  c.gear = document.getElementById("gear").value;
+
+  // stats
+  c.stats = {};
+  document.querySelectorAll("#stats input").forEach(i=> c.stats[i.dataset.stat] = +i.value || 0);
+
+  // skills are edited live (we already saved them on change)
   saveToStorage();
   refreshCharList();
-  openCharacter(characters.length-1);
 };
-document.getElementById("duplicateBtn").onclick = ()=>{
-  if(selectedIndex!==null){
-    const copy = JSON.parse(JSON.stringify(characters[selectedIndex]));
-    characters.push(copy);
-    saveToStorage();
-    refreshCharList();
-  }
-};
-document.getElementById("deleteBtn").onclick = ()=>{
-  if(selectedIndex!==null){
-    characters.splice(selectedIndex,1);
-    selectedIndex=null;
-    saveToStorage();
-    refreshCharList();
-    document.getElementById("editorForm").style.display="none";
-  }
-};
-document.getElementById("saveBtn").onclick = ()=>{
-  if(selectedIndex!==null){
-    const c = characters[selectedIndex];
-    c.name=document.getElementById("name").value;
-    c.species=document.getElementById("species").value;
-    c.career=document.getElementById("career").value;
-    c.notes=document.getElementById("notes").value;
-    c.wounds=parseInt(document.getElementById("wounds").value)||0;
-    c.strain=parseInt(document.getElementById("strain").value)||0;
-    c.soak=parseInt(document.getElementById("soak").value)||0;
-    c.defense=parseInt(document.getElementById("defense").value)||0;
-    c.gear=document.getElementById("gear").value;
-    saveToStorage();
-    refreshCharList();
-  }
-};
-document.getElementById("exportBtn").onclick = ()=>{
-  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(characters));
-  const dlAnchor = document.createElement("a");
-  dlAnchor.href = dataStr;
-  dlAnchor.download = "characters.json";
-  dlAnchor.click();
-};
-document.getElementById("importBtn").onclick = ()=>{ document.getElementById("importFile").click(); };
-document.getElementById("importFile").onchange = (e)=>{
-  const file = e.target.files[0];
-  const reader = new FileReader();
-  reader.onload = (ev)=>{
-    try{
-      characters = JSON.parse(ev.target.result);
-      selectedIndex=null;
-      saveToStorage();
-      refreshCharList();
-      document.getElementById("editorForm").style.display="none";
-    }catch(err){ alert("Invalid JSON"); }
+
+/* ================= DICE ROLLER (uses dice/ images) ================= */
+function rollDice() {
+  const counts = {
+    ability: +document.getElementById("diceAbility").value || 0,
+    proficiency: +document.getElementById("diceProficiency").value || 0,
+    boost: +document.getElementById("diceBoost").value || 0,
+    difficulty: +document.getElementById("diceDifficulty").value || 0,
+    challenge: +document.getElementById("diceChallenge").value || 0,
+    setback: +document.getElementById("diceSetback").value || 0,
+    force: +document.getElementById("diceForce").value || 0
   };
-  reader.readAsText(file);
+
+  const result = { success:0, advantage:0, failure:0, threat:0, triumph:0, despair:0, forceLight:0, forceDark:0 };
+  const resultDiv = document.getElementById("diceResult");
+  resultDiv.innerHTML = "";
+
+  function showFace(fname) {
+    const img = document.createElement("img");
+    img.src = "dice/" + fname;
+    img.style.width = "36px"; img.style.height = "36px"; img.style.margin = "2px";
+    img.dataset.face = fname;
+    img.onerror = function(){
+      // fallback emoji if image missing
+      const name = (this.dataset.face || "").toLowerCase();
+      const prefix = name.split("_")[0] || "";
+      const map = { green: "🟢", yellow: "🟡", purple: "🟣", red: "🔴", blue: "🔵", black: "⚫", white: "⚪" };
+      const span = document.createElement("span");
+      span.textContent = map[prefix] || "🎲";
+      span.style.fontSize = "20px"; span.style.margin = "6px";
+      this.replaceWith(span);
+    };
+    resultDiv.appendChild(img);
+  }
+
+  function pickFace(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+  Object.keys(counts).forEach(type => {
+    const num = counts[type];
+    if(!num) return;
+    for(let i=0;i<num;i++){
+      const face = pickFace(diceFaces[type]);
+      showFace(face);
+      const f = face.toLowerCase();
+
+      if(type === "ability"){
+        if(f.includes("success_success")) result.success += 2;
+        else if(f.includes("success_adv")) { result.success += 1; result.advantage += 1; }
+        else if(f.includes("success")) result.success += 1;
+
+        if(f.includes("advantage_advantage")) result.advantage += 2;
+        else if(f.includes("advantage")) result.advantage += 1;
+      }
+      else if(type === "proficiency"){
+        if(f.includes("triumph")) { result.triumph += 1; result.success += 1; }
+        if(f.includes("success_success")) result.success += 2;
+        else if(f.includes("success_adv")) { result.success += 1; result.advantage += 1; }
+        else if(f.includes("success")) result.success += 1;
+
+        if(f.includes("advantage_advantage")) result.advantage += 2;
+        else if(f.includes("advantage")) result.advantage += 1;
+      }
+      else if(type === "boost"){
+        if(f.includes("success_adv")) { result.success += 1; result.advantage += 1; }
+        else if(f.includes("success")) result.success += 1;
+
+        if(f.includes("advantage_advantage")) result.advantage += 2;
+        else if(f.includes("advantage")) result.advantage += 1;
+      }
+      else if(type === "difficulty"){
+        if(f.includes("failure_failure")) result.failure += 2;
+        else if(f.includes("failure")) result.failure += 1;
+
+        if(f.includes("threat_threat")) result.threat += 2;
+        else if(f.includes("threat")) result.threat += 1;
+      }
+      else if(type === "challenge"){
+        if(f.includes("despair")) { result.despair += 1; result.failure += 1; }
+        if(f.includes("triumph")) { result.triumph += 1; result.success += 1; }
+
+        if(f.includes("failure_failure")) result.failure += 2;
+        else if(f.includes("failure")) result.failure += 1;
+
+        if(f.includes("threat_threat")) result.threat += 2;
+        else if(f.includes("threat")) result.threat += 1;
+      }
+      else if(type === "setback"){
+        if(f.includes("failure")) result.failure += 1;
+        if(f.includes("threat")) result.threat += 1;
+      }
+      else if(type === "force"){
+        if(f.includes("light")) result.forceLight += 1;
+        if(f.includes("dark")) result.forceDark += 1;
+      }
+    }
+  });
+
+  const netSuccess = result.success - result.failure;
+  const netAdv = result.advantage - result.threat;
+  const netDiv = document.getElementById("netResult");
+  netDiv.innerHTML = `
+    <span class="${netSuccess>0?'net-positive':netSuccess<0?'net-negative':'net-neutral'}">Success: ${netSuccess}</span> &nbsp;
+    <span class="${netAdv>0?'net-positive':netAdv<0?'net-negative':'net-neutral'}">Advantage: ${netAdv}</span> &nbsp;
+    <span class="net-neutral">Triumph: ${result.triumph}</span> &nbsp;
+    <span class="net-neutral">Despair: ${result.despair}</span> &nbsp;
+    <span class="net-neutral">Force ▶︎ Light: ${result.forceLight} / Dark: ${result.forceDark}</span>
+  `;
+}
+
+/* ================= BUTTONS / UTILITIES ================= */
+document.getElementById("rollDiceBtn").onclick = rollDice;
+document.getElementById("clearDiceBtn").onclick = ()=>{ document.getElementById("diceResult").innerHTML = ""; document.getElementById("netResult").innerHTML = ""; };
+
+document.getElementById("newBtn").onclick = ()=>{
+  const baseStats = {Brawn:0,Agility:0,Intellect:0,Cunning:0,Willpower:0,Presence:0};
+  const c = { name:"New Character", species:"", career:"", notes:"", wounds:0, strain:0, soak:0, defense:0, gear:"", stats: {...baseStats}, skills:{} };
+  characters.push(c); saveToStorage(); refreshCharList();
 };
-document.getElementById("seedBtn").onclick = ()=>{
-  characters=[{name:"Luke Skywalker",stats:{Brawn:2,Agility:3,Intellect:3,Cunning:2,Willpower:3,Presence:3},skills:{Athletics:{rank:2},Piloting:{rank:3}}}];
+
+document.getElementById("duplicateBtn").onclick = ()=>{
+  if(selectedIndex === null) return;
+  const copy = JSON.parse(JSON.stringify(characters[selectedIndex]));
+  copy.name = (copy.name || "Character") + " (Copy)";
+  characters.push(copy); saveToStorage(); refreshCharList();
+};
+
+document.getElementById("deleteBtn").onclick = ()=>{
+  if(selectedIndex === null) return;
+  if(!confirm("Delete this character?")) return;
+  characters.splice(selectedIndex, 1);
+  selectedIndex = null;
   saveToStorage();
   refreshCharList();
+  document.getElementById("editorForm").style.display = "none";
+  document.getElementById("charNameDisplay").textContent = "— select a character —";
 };
-document.getElementById("clearAllBtn").onclick = ()=>{ characters=[]; selectedIndex=null; saveToStorage(); refreshCharList(); document.getElementById("editorForm").style.display="none"; };
-document.getElementById("printBtn").onclick = ()=>{ window.print(); };
+
+document.getElementById("exportBtn").onclick = ()=>{
+  const blob = new Blob([JSON.stringify(characters, null, 2)], { type: "application/json" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "characters.json"; a.click();
+};
+
+document.getElementById("importBtn").onclick = ()=> document.getElementById("importFile").click();
+document.getElementById("importFile").onchange = e => {
+  const file = e.target.files[0];
+  if(!file) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const imported = JSON.parse(r.result || "[]");
+      if(Array.isArray(imported)) characters = imported;
+      else throw new Error("Invalid format");
+      saveToStorage(); refreshCharList();
+      selectedIndex = null;
+      document.getElementById("editorForm").style.display = "none";
+      document.getElementById("charNameDisplay").textContent = "— select a character —";
+    } catch(err) {
+      alert("Import failed: invalid JSON");
+    }
+  };
+  r.readAsText(file);
+};
+
+document.getElementById("seedBtn").onclick = ()=>{
+  characters = [{
+    name:"Han Solo", species:"Human", career:"Smuggler",
+    notes:"Never tell me the odds.",
+    wounds:3, strain:2, soak:4, defense:1, gear:"DL-44, Millennium Falcon",
+    stats:{Brawn:2,Agility:3,Intellect:2,Cunning:3,Willpower:2,Presence:3},
+    skills:{ "Piloting (Space)":{rank:2}, Deception:{rank:1}, Mechanics:{rank:1} }
+  }];
+  saveToStorage(); refreshCharList();
+};
+
+document.getElementById("clearAllBtn").onclick = ()=>{ if(confirm("Clear all characters?")){ characters = []; saveToStorage(); refreshCharList(); } };
+document.getElementById("printBtn").onclick = ()=> window.print();
 
 /* ================= INIT ================= */
 loadFromStorage();
 refreshCharList();
+
 </script>
 </body>
 </html>
