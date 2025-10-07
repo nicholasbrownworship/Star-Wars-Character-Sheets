@@ -135,10 +135,13 @@ button:hover{background:rgba(68,215,255,0.08)}
           <label>Setback<input type="number" min="0" id="diceSetback"></label>
           <label>Force<input type="number" min="0" id="diceForce"></label>
         </div>
-        <div style="margin-top:6px">
-          <button id="rollDiceBtn">Roll</button>
-          <button id="clearDiceBtn">Clear</button>
-        </div>
+        <div style="margin-top:6px; display:flex; gap:6px; flex-wrap:wrap">
+  <button id="rollDiceBtn">Roll</button>
+  <button id="clearDiceBtn">Clear</button>
+  <button class="negativeDiceBtn" data-type="difficulty">+Difficulty (Purple)</button>
+  <button class="negativeDiceBtn" data-type="challenge">+Challenge (Red)</button>
+  <button class="negativeDiceBtn" data-type="setback">+Setback (Black)</button>
+</div>
         <div class="dice-result" id="diceResult"></div>
         <div class="dice-result" id="netResult" style="margin-top:6px"></div>
       </div>
@@ -446,6 +449,15 @@ function rollDice() {
 /* ================= BUTTONS / UTILITIES ================= */
 document.getElementById("rollDiceBtn").onclick = rollDice;
 document.getElementById("clearDiceBtn").onclick = ()=>{ document.getElementById("diceResult").innerHTML = ""; document.getElementById("netResult").innerHTML = ""; };
+  // Increment negative dice buttons
+document.querySelectorAll(".negativeDiceBtn").forEach(btn => {
+  btn.onclick = () => {
+    const type = btn.dataset.type;
+    const input = document.getElementById("dice" + type.charAt(0).toUpperCase() + type.slice(1));
+    input.value = (+input.value || 0) + 1;
+  };
+});
+
 
 document.getElementById("newBtn").onclick = ()=>{
   const baseStats = {Brawn:0,Agility:0,Intellect:0,Cunning:0,Willpower:0,Presence:0};
