@@ -434,16 +434,19 @@ function rollDice() {
     }
   });
 
-  const netSuccess = result.success - result.failure;
-  const netAdv = result.advantage - result.threat;
-  const netDiv = document.getElementById("netResult");
-  netDiv.innerHTML = `
-    <span class="${netSuccess>0?'net-positive':netSuccess<0?'net-negative':'net-neutral'}">Success: ${netSuccess}</span> &nbsp;
-    <span class="${netAdv>0?'net-positive':netAdv<0?'net-negative':'net-neutral'}">Advantage: ${netAdv}</span> &nbsp;
-    <span class="net-neutral">Triumph: ${result.triumph}</span> &nbsp;
-    <span class="net-neutral">Despair: ${result.despair}</span> &nbsp;
-    <span class="net-neutral">Force ▶︎ Light: ${result.forceLight} / Dark: ${result.forceDark}</span>
-  `;
+const netSuccess = result.success - result.failure;
+const netAdv = result.advantage - result.threat;
+const outcome = netSuccess > 0 ? "Success" : "Fail"; // outcome logic
+
+const netDiv = document.getElementById("netResult");
+netDiv.innerHTML = `
+  <span class="${netSuccess>0?'net-positive':netSuccess<0?'net-negative':'net-neutral'}">Success: ${netSuccess}</span> &nbsp;
+  <span class="${netAdv>0?'net-positive':netAdv<0?'net-negative':'net-neutral'}">Advantage: ${netAdv}</span> &nbsp;
+  <span class="net-neutral">Triumph: ${result.triumph}</span> &nbsp;
+  <span class="net-neutral">Despair: ${result.despair}</span> &nbsp;
+  <span class="net-neutral">Force ▶︎ Light: ${result.forceLight} / Dark: ${result.forceDark}</span> <br/>
+  <strong class="${netSuccess>0?'net-positive':'net-negative'}" style="margin-top:4px; display:block;">Outcome: ${outcome}</strong>
+`;
 }
 
 /* ================= BUTTONS / UTILITIES ================= */
