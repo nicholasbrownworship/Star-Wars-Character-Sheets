@@ -110,6 +110,8 @@ function ensureCharacterShape(c) {
   if (typeof c.woundThreshold !== 'number') c.woundThreshold = 0;
   if (typeof c.strainThreshold !== 'number') c.strainThreshold = 0;
 
+  if (!c.portrait) c.portrait = ""; // NEW: portrait URL/data
+
   ensureShipShape(c);
 }
 
@@ -568,6 +570,23 @@ function updateWoundStrainUI() {
   strainInput.classList.toggle("danger", st > 0 && s >= st);
 }
 
+/* === PORTRAIT RENDER === */
+function renderPortrait(c) {
+  const img = document.getElementById("portraitPreview");
+  const placeholder = document.getElementById("portraitPlaceholder");
+  if (!img || !placeholder) return;
+
+  if (c.portrait) {
+    img.src = c.portrait;
+    img.style.display = "block";
+    placeholder.style.display = "none";
+  } else {
+    img.src = "";
+    img.style.display = "none";
+    placeholder.style.display = "block";
+  }
+}
+
 /* ================= CHARACTER EDIT / OPEN ================= */
 function openCharacter(index) {
   selectedIndex = index;
@@ -588,6 +607,7 @@ function openCharacter(index) {
   document.getElementById("woundThreshold").value = c.woundThreshold || 0;
   document.getElementById("strainThreshold").value = c.strainThreshold || 0;
 
+  renderPortrait(c);
   renderStats(c.stats);
   renderSkills(c.skills);
   renderXP(c);
@@ -664,6 +684,40 @@ document.querySelectorAll(".tracker-btn").forEach(btn => {
     updateWoundStrainUI();
   };
 });
+
+/* === PORTRAIT UPLOAD/CLEAR === */
+const portraitUploadBtn = document.getElementById("portraitUploadBtn");
+const portraitClearBtn  = document.getElementById("portraitClearBtn");
+const portraitFileInput = document.getElementById("portraitFile");
+
+portraitUploadBtn.onclick = () => {
+  if (selectedIndex === null) return;
+  portraitFileInput.click();
+};
+
+portraitFileInput.onchange = (e) => {
+  if (selectedIndex === null) return;
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    const c = characters[selectedIndex];
+    c.portrait = reader.result; // data URL
+    saveToStorage();
+    renderPortrait(c);
+    // reset input so same file can be chosen again later if needed
+    portraitFileInput.value = "";
+  };
+  reader.readAsDataURL(file);
+};
+
+portraitClearBtn.onclick = () => {
+  if (selectedIndex === null) return;
+  const c = characters[selectedIndex];
+  c.portrait = "";
+  saveToStorage();
+  renderPortrait(c);
+};
 
 /* ================= DICE ROLLER ================= */
 function rollDice() {
@@ -849,6 +903,7 @@ document.getElementById("newBtn").onclick = () => {
     criticalInjuries: [],
     woundThreshold:0,
     strainThreshold:0,
+    portrait:"",
     ship: {
       name:"", model:"",
       silhouette:0, speed:0, handling:0, armor:0,
@@ -941,6 +996,7 @@ document.getElementById("seedBtn").onclick = () => {
     ],
     woundThreshold: 14,
     strainThreshold: 12,
+    portrait:"",
     ship: {
       name:"Millennium Falcon",
       model:"YT-1300",
