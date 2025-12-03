@@ -40,6 +40,30 @@ function loadFromStorage() {
   if (d) characters = JSON.parse(d);
 }
 
+/* ================= HELPERS TO ENSURE NEW FIELDS EXIST ================= */
+function ensureCharacterShape(c) {
+  // existing fields are left as-is
+  if (!c.stats) c.stats = {};
+  ["Brawn","Agility","Intellect","Cunning","Willpower","Presence"].forEach(k => {
+    if (typeof c.stats[k] !== 'number') c.stats[k] = 0;
+  });
+
+  if (!c.skills) c.skills = {};
+
+  if (!c.xp) {
+    c.xp = { starting: 0, earned: 0, spent: 0 };
+  } else {
+    c.xp.starting = c.xp.starting || 0;
+    c.xp.earned   = c.xp.earned   || 0;
+    c.xp.spent    = c.xp.spent    || 0;
+  }
+
+  if (!Array.isArray(c.specializations)) c.specializations = [];
+  if (!Array.isArray(c.talents)) c.talents = [];
+  if (!Array.isArray(c.weapons)) c.weapons = [];
+  if (!Array.isArray(c.armor))   c.armor   = [];
+}
+
 /* ================= RENDERING ================= */
 function refreshCharList() {
   const list = document.getElementById("charList");
@@ -87,10 +111,9 @@ function renderSkills(skills) {
     const container = document.createElement("div");
     container.className = "skill";
 
-    // set innerHTML for skill block
     container.innerHTML = `
       <div style="display:flex;flex-direction:column;min-width:220px;">
-        <strong style="font-size:13px">${skill}</strong>
+        <strong style="font-size:13px; cursor:pointer">${skill}</strong>
         <span style="font-size:11px;color:var(--muted)">
           ${attr || "—"}: ${attrValue} + Rank: ${rank}
         </span>
@@ -110,7 +133,6 @@ function renderSkills(skills) {
       document.getElementById("diceAbility").value = abilityDice;
       document.getElementById("diceProficiency").value = proficiencyDice;
 
-      // flash outline on the whole skill block for feedback
       container.style.boxShadow = "0 0 8px 2px rgba(68,215,255,0.18)";
       setTimeout(() => container.style.boxShadow = "", 300);
     };
@@ -124,7 +146,7 @@ function renderSkills(skills) {
       renderSkills(skills);
     };
 
-    // dice dot visualization: up to max(attrValue, rank), with "upgrades" equal to min(attr, rank)
+    // dice dot visualization
     const diceDiv = container.querySelector(".skillDice");
     let total = Math.max(rank, attrValue);
     let upgrades = Math.min(rank, attrValue);
@@ -135,7 +157,6 @@ function renderSkills(skills) {
       diceDiv.appendChild(dot);
     }
 
-    // CLICK ON DICE DOTS TO AUTO-FILL DICE POOL
     diceDiv.onclick = () => {
       const proficiencyDice = Math.min(attrValue, rank);
       const abilityDice = Math.max(attrValue, rank) - proficiencyDice;
@@ -143,7 +164,6 @@ function renderSkills(skills) {
       document.getElementById("diceAbility").value = abilityDice;
       document.getElementById("diceProficiency").value = proficiencyDice;
 
-      // visual feedback: flash outline on dots
       diceDiv.style.boxShadow = "0 0 8px rgba(68,215,255,0.18)";
       setTimeout(() => diceDiv.style.boxShadow = "", 300);
     };
@@ -152,10 +172,187 @@ function renderSkills(skills) {
   });
 }
 
+/* === XP RENDER/UPDATE === */
+function renderXP(c) {
+  const xp = c.xp || { starting: 0, earned: 0, spent: 0 };
+  document.getElementById("xpStarting").value = xp.starting || 0;
+  document.getElementById("xpEarned").value   = xp.earned   || 0;
+  document.getElementById("xpSpent").value    = xp.spent    || 0;
+  updateAvailableXP();
+}
+
+function updateAvailableXP() {
+  if (selectedIndex === null) return;
+  const c = characters[selectedIndex];
+  c.xp = c.xp || { starting: 0, earned: 0, spent: 0 };
+
+  c.xp.starting = +document.getElementById("xpStarting").value || 0;
+  c.xp.earned   = +document.getElementById("xpEarned").value   || 0;
+  c.xp.spent    = +document.getElementById("xpSpent").value    || 0;
+
+  const available = c.xp.starting + c.xp.earned - c.xp.spent;
+  document.getElementById("xpAvailable").textContent = available;
+
+  saveToStorage();
+}
+
+/* === SPECIALIZATIONS === */
+function renderSpecializations(c) {
+  const container = document.getElementById("specList");
+  container.innerHTML = "";
+  c.specializations.forEach((spec, idx) => {
+    const row = document.createElement("div");
+    row.className = "list-row";
+    row.innerHTML = `
+      <input type="text" placeholder="Name" value="${spec.name || ""}" data-field="name" data-index="${idx}">
+      <input type="text" placeholder="Source (book/page)" value="${spec.source || ""}" data-field="source" data-index="${idx}">
+      <input type="text" placeholder="Notes" value="${spec.notes || ""}" data-field="notes" data-index="${idx}">
+      <button type="button" class="mini-btn danger" data-remove="${idx}">✕</button>
+    `;
+    // hook up change handlers
+    row.querySelectorAll("input").forEach(input => {
+      input.oninput = (e) => {
+        const i = parseInt(e.target.dataset.index,10);
+        const field = e.target.dataset.field;
+        c.specializations[i][field] = e.target.value;
+        saveToStorage();
+      };
+    });
+    row.querySelector("button[data-remove]").onclick = () => {
+      c.specializations.splice(idx,1);
+      saveToStorage();
+      renderSpecializations(c);
+    };
+    container.appendChild(row);
+  });
+}
+
+/* === TALENTS === */
+function renderTalents(c) {
+  const container = document.getElementById("talentList");
+  container.innerHTML = "";
+  c.talents.forEach((tal, idx) => {
+    const row = document.createElement("div");
+    row.className = "list-row";
+    row.innerHTML = `
+      <input type="text" placeholder="Talent name" value="${tal.name || ""}" data-field="name" data-index="${idx}">
+      <input type="number" min="0" class="tiny" placeholder="Rank" value="${tal.rank || 0}" data-field="rank" data-index="${idx}">
+      <input type="text" class="short" placeholder="Activation" value="${tal.activation || ""}" data-field="activation" data-index="${idx}">
+      <input type="text" placeholder="Effect summary" value="${tal.summary || ""}" data-field="summary" data-index="${idx}">
+      <input type="text" class="short" placeholder="Source" value="${tal.source || ""}" data-field="source" data-index="${idx}">
+      <button type="button" class="mini-btn danger" data-remove="${idx}">✕</button>
+    `;
+
+    row.querySelectorAll("input").forEach(input => {
+      input.oninput = (e) => {
+        const i = parseInt(e.target.dataset.index,10);
+        const field = e.target.dataset.field;
+        if (field === "rank") {
+          c.talents[i][field] = +e.target.value || 0;
+        } else {
+          c.talents[i][field] = e.target.value;
+        }
+        saveToStorage();
+      };
+    });
+
+    row.querySelector("button[data-remove]").onclick = () => {
+      c.talents.splice(idx,1);
+      saveToStorage();
+      renderTalents(c);
+    };
+
+    container.appendChild(row);
+  });
+}
+
+/* === WEAPONS === */
+function renderWeapons(c) {
+  const container = document.getElementById("weaponList");
+  container.innerHTML = "";
+  c.weapons.forEach((w, idx) => {
+    const row = document.createElement("div");
+    row.className = "list-row";
+    row.innerHTML = `
+      <input type="text" placeholder="Name" value="${w.name || ""}" data-field="name" data-index="${idx}">
+      <input type="text" placeholder="Skill" value="${w.skill || ""}" data-field="skill" data-index="${idx}">
+      <input type="number" class="tiny" placeholder="Dmg" value="${w.damage || ""}" data-field="damage" data-index="${idx}">
+      <input type="number" class="tiny" placeholder="Crit" value="${w.crit || ""}" data-field="crit" data-index="${idx}">
+      <input type="text" class="short" placeholder="Range" value="${w.range || ""}" data-field="range" data-index="${idx}">
+      <input type="number" class="tiny" placeholder="Enc" value="${w.encumbrance || ""}" data-field="encumbrance" data-index="${idx}">
+      <input type="number" class="tiny" placeholder="HP" value="${w.hp || ""}" data-field="hp" data-index="${idx}">
+      <input type="text" placeholder="Qualities" value="${w.qualities || ""}" data-field="qualities" data-index="${idx}">
+      <button type="button" class="mini-btn danger" data-remove="${idx}">✕</button>
+    `;
+
+    row.querySelectorAll("input").forEach(input => {
+      input.oninput = (e) => {
+        const i = parseInt(e.target.dataset.index,10);
+        const field = e.target.dataset.field;
+        if (["damage","crit","encumbrance","hp"].includes(field)) {
+          c.weapons[i][field] = +e.target.value || 0;
+        } else {
+          c.weapons[i][field] = e.target.value;
+        }
+        saveToStorage();
+      };
+    });
+
+    row.querySelector("button[data-remove]").onclick = () => {
+      c.weapons.splice(idx,1);
+      saveToStorage();
+      renderWeapons(c);
+    };
+
+    container.appendChild(row);
+  });
+}
+
+/* === ARMOR === */
+function renderArmor(c) {
+  const container = document.getElementById("armorList");
+  container.innerHTML = "";
+  c.armor.forEach((a, idx) => {
+    const row = document.createElement("div");
+    row.className = "list-row";
+    row.innerHTML = `
+      <input type="text" placeholder="Armor name" value="${a.name || ""}" data-field="name" data-index="${idx}">
+      <input type="number" class="tiny" placeholder="Soak" value="${a.soak || ""}" data-field="soak" data-index="${idx}">
+      <input type="number" class="tiny" placeholder="Def" value="${a.defense || ""}" data-field="defense" data-index="${idx}">
+      <input type="number" class="tiny" placeholder="Enc" value="${a.encumbrance || ""}" data-field="encumbrance" data-index="${idx}">
+      <input type="text" placeholder="Qualities" value="${a.qualities || ""}" data-field="qualities" data-index="${idx}">
+      <button type="button" class="mini-btn danger" data-remove="${idx}">✕</button>
+    `;
+
+    row.querySelectorAll("input").forEach(input => {
+      input.oninput = (e) => {
+        const i = parseInt(e.target.dataset.index,10);
+        const field = e.target.dataset.field;
+        if (["soak","defense","encumbrance"].includes(field)) {
+          c.armor[i][field] = +e.target.value || 0;
+        } else {
+          c.armor[i][field] = e.target.value;
+        }
+        saveToStorage();
+      };
+    });
+
+    row.querySelector("button[data-remove]").onclick = () => {
+      c.armor.splice(idx,1);
+      saveToStorage();
+      renderArmor(c);
+    };
+
+    container.appendChild(row);
+  });
+}
+
 /* ================= CHARACTER EDIT / OPEN ================= */
 function openCharacter(index) {
   selectedIndex = index;
   const c = characters[index];
+  ensureCharacterShape(c);
+
   document.getElementById("editorForm").style.display = "block";
   document.getElementById("charNameDisplay").textContent = c.name || "(Unnamed)";
   document.getElementById("name").value = c.name || "";
@@ -168,19 +365,17 @@ function openCharacter(index) {
   document.getElementById("defense").value = c.defense || 0;
   document.getElementById("gear").value = c.gear || "";
 
-  // ensure stats object exists and fill missing attributes with 0
-  c.stats = c.stats || {};
-  ["Brawn","Agility","Intellect","Cunning","Willpower","Presence"].forEach(k => {
-    if (typeof c.stats[k] !== 'number') c.stats[k] = 0;
-  });
-
-  c.skills = c.skills || {};
   renderStats(c.stats);
   renderSkills(c.skills);
+  renderXP(c);
+  renderSpecializations(c);
+  renderTalents(c);
+  renderWeapons(c);
+  renderArmor(c);
   refreshCharList();
 }
 
-/* ================= SAVE ================= */
+/* ================= SAVE (BASIC FIELDS) ================= */
 document.getElementById("saveBtn").onclick = () => {
   if (selectedIndex === null) return;
   const c = characters[selectedIndex];
@@ -200,12 +395,17 @@ document.getElementById("saveBtn").onclick = () => {
     c.stats[i.dataset.stat] = +i.value || 0;
   });
 
-  // skills are edited live (we already saved them on change)
   saveToStorage();
   refreshCharList();
 };
 
-/* ================= DICE ROLLER (uses dice/ images) ================= */
+/* Bind XP inputs once */
+["xpStarting","xpEarned","xpSpent"].forEach(id => {
+  const el = document.getElementById(id);
+  el.oninput = updateAvailableXP;
+});
+
+/* ================= DICE ROLLER ================= */
 function rollDice() {
   const counts = {
     ability: +document.getElementById("diceAbility").value || 0,
@@ -233,7 +433,6 @@ function rollDice() {
     img.style.margin = "2px";
     img.dataset.face = fname;
     img.onerror = function () {
-      // fallback emoji if image missing
       const name = (this.dataset.face || "").toLowerCase();
       const prefix = name.split("_")[0] || "";
       const map = {
@@ -336,7 +535,7 @@ function rollDice() {
 
   const netSuccess = result.success - result.failure;
   const netAdv = result.advantage - result.threat;
-  const outcome = netSuccess > 0 ? "Success" : "Fail"; // outcome logic
+  const outcome = netSuccess > 0 ? "Success" : "Fail";
 
   const netDiv = document.getElementById("netResult");
   netDiv.innerHTML = `
@@ -359,16 +558,10 @@ function rollDice() {
 document.getElementById("rollDiceBtn").onclick = rollDice;
 
 document.getElementById("clearDiceBtn").onclick = () => {
-  // Clear dice result displays
   document.getElementById("diceResult").innerHTML = "";
   document.getElementById("netResult").innerHTML = "";
-
-  // Clear all dice input fields
-  const diceInputs = [
-    "diceAbility","diceProficiency","diceBoost",
-    "diceDifficulty","diceChallenge","diceSetback","diceForce"
-  ];
-  diceInputs.forEach(id => document.getElementById(id).value = 0);
+  ["diceAbility","diceProficiency","diceBoost","diceDifficulty","diceChallenge","diceSetback","diceForce"]
+    .forEach(id => document.getElementById(id).value = 0);
 };
 
 // Increment negative dice buttons
@@ -387,7 +580,12 @@ document.getElementById("newBtn").onclick = () => {
   const c = {
     name:"New Character", species:"", career:"", notes:"",
     wounds:0, strain:0, soak:0, defense:0, gear:"",
-    stats: {...baseStats}, skills:{}
+    stats: {...baseStats}, skills:{},
+    xp: { starting:0, earned:0, spent:0 },
+    specializations: [],
+    talents: [],
+    weapons: [],
+    armor: []
   };
   characters.push(c);
   saveToStorage();
@@ -452,7 +650,20 @@ document.getElementById("seedBtn").onclick = () => {
     notes:"Never tell me the odds.",
     wounds:3, strain:2, soak:4, defense:1, gear:"DL-44, Millennium Falcon",
     stats:{Brawn:2,Agility:3,Intellect:2,Cunning:3,Willpower:2,Presence:3},
-    skills:{ "Piloting (Space)":{rank:2}, Deception:{rank:1}, Mechanics:{rank:1} }
+    skills:{ "Piloting (Space)":{rank:2}, Deception:{rank:1}, Mechanics:{rank:1} },
+    xp: { starting:100, earned:50, spent:120 },
+    specializations: [
+      { name: "Scoundrel", source: "EotE Core", notes: "" }
+    ],
+    talents: [
+      { name: "Quick Draw", rank:1, activation:"Incidental", summary:"Draw or stow a weapon as an incidental.", source:"EotE Core" }
+    ],
+    weapons: [
+      { name:"DL-44", skill:"Ranged (Light)", damage:7, crit:3, range:"Medium", encumbrance:1, hp:3, qualities:"Stun setting" }
+    ],
+    armor: [
+      { name:"Armored Jacket", soak:1, defense:1, encumbrance:3, qualities:"Soak +1, Defense +1" }
+    ]
   }];
   saveToStorage();
   refreshCharList();
@@ -467,6 +678,48 @@ document.getElementById("clearAllBtn").onclick = () => {
 };
 
 document.getElementById("printBtn").onclick = () => window.print();
+
+/* ADD BUTTONS FOR NEW LIST ITEMS */
+document.getElementById("addSpecBtn").onclick = () => {
+  if (selectedIndex === null) return;
+  const c = characters[selectedIndex];
+  ensureCharacterShape(c);
+  c.specializations.push({ name:"", source:"", notes:"" });
+  saveToStorage();
+  renderSpecializations(c);
+};
+
+document.getElementById("addTalentBtn").onclick = () => {
+  if (selectedIndex === null) return;
+  const c = characters[selectedIndex];
+  ensureCharacterShape(c);
+  c.talents.push({ name:"", rank:0, activation:"", summary:"", source:"" });
+  saveToStorage();
+  renderTalents(c);
+};
+
+document.getElementById("addWeaponBtn").onclick = () => {
+  if (selectedIndex === null) return;
+  const c = characters[selectedIndex];
+  ensureCharacterShape(c);
+  c.weapons.push({
+    name:"", skill:"", damage:0, crit:0,
+    range:"", encumbrance:0, hp:0, qualities:""
+  });
+  saveToStorage();
+  renderWeapons(c);
+};
+
+document.getElementById("addArmorBtn").onclick = () => {
+  if (selectedIndex === null) return;
+  const c = characters[selectedIndex];
+  ensureCharacterShape(c);
+  c.armor.push({
+    name:"", soak:0, defense:0, encumbrance:0, qualities:""
+  });
+  saveToStorage();
+  renderArmor(c);
+};
 
 /* ================= INIT ================= */
 loadFromStorage();
