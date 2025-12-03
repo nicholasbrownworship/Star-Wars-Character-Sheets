@@ -29,20 +29,63 @@ const diceFaces = {
 /* ================= STATE ================= */
 let characters = [];
 let selectedIndex = null;
+let destiny = { light: 0, dark: 0 };
 
 /* ================= STORAGE ================= */
 function saveToStorage() {
   localStorage.setItem("ffgChars", JSON.stringify(characters));
 }
-
 function loadFromStorage() {
   const d = localStorage.getItem("ffgChars");
   if (d) characters = JSON.parse(d);
 }
 
+function saveDestiny() {
+  localStorage.setItem("ffgDestiny", JSON.stringify(destiny));
+}
+function loadDestiny() {
+  const d = localStorage.getItem("ffgDestiny");
+  if (!d) return;
+  try {
+    const parsed = JSON.parse(d);
+    destiny.light = parsed.light || 0;
+    destiny.dark  = parsed.dark  || 0;
+  } catch {
+    destiny = { light:0, dark:0 };
+  }
+}
+
 /* ================= HELPERS TO ENSURE NEW FIELDS EXIST ================= */
+function ensureShipShape(c) {
+  if (!c.ship) {
+    c.ship = {
+      name:"", model:"",
+      silhouette:0, speed:0, handling:0, armor:0,
+      hullTraumaThreshold:0, hullTraumaCurrent:0,
+      systemStrainThreshold:0, systemStrainCurrent:0,
+      defenseFore:0, defenseAft:0, defensePort:0, defenseStarboard:0,
+      notes:"",
+      weapons:[]
+    };
+  } else {
+    if (!Array.isArray(c.ship.weapons)) c.ship.weapons = [];
+    c.ship.silhouette = c.ship.silhouette || 0;
+    c.ship.speed      = c.ship.speed      || 0;
+    c.ship.handling   = c.ship.handling   || 0;
+    c.ship.armor      = c.ship.armor      || 0;
+    c.ship.hullTraumaThreshold   = c.ship.hullTraumaThreshold   || 0;
+    c.ship.hullTraumaCurrent     = c.ship.hullTraumaCurrent     || 0;
+    c.ship.systemStrainThreshold = c.ship.systemStrainThreshold || 0;
+    c.ship.systemStrainCurrent   = c.ship.systemStrainCurrent   || 0;
+    c.ship.defenseFore      = c.ship.defenseFore      || 0;
+    c.ship.defenseAft       = c.ship.defenseAft       || 0;
+    c.ship.defensePort      = c.ship.defensePort      || 0;
+    c.ship.defenseStarboard = c.ship.defenseStarboard || 0;
+    c.ship.notes = c.ship.notes || "";
+  }
+}
+
 function ensureCharacterShape(c) {
-  // existing fields are left as-is
   if (!c.stats) c.stats = {};
   ["Brawn","Agility","Intellect","Cunning","Willpower","Presence"].forEach(k => {
     if (typeof c.stats[k] !== 'number') c.stats[k] = 0;
@@ -59,9 +102,14 @@ function ensureCharacterShape(c) {
   }
 
   if (!Array.isArray(c.specializations)) c.specializations = [];
-  if (!Array.isArray(c.talents)) c.talents = [];
-  if (!Array.isArray(c.weapons)) c.weapons = [];
-  if (!Array.isArray(c.armor))   c.armor   = [];
+  if (!Array.isArray(c.talents))         c.talents         = [];
+  if (!Array.isArray(c.weapons))         c.weapons         = [];
+  if (!Array.isArray(c.armor))           c.armor           = [];
+
+  if (typeof c.woundThreshold !== 'number') c.woundThreshold = 0;
+  if (typeof c.strainThreshold !== 'number') c.strainThreshold = 0;
+
+  ensureShipShape(c);
 }
 
 /* ================= RENDERING ================= */
@@ -196,6 +244,27 @@ function updateAvailableXP() {
   saveToStorage();
 }
 
+/* === DESTINY POOL RENDER === */
+function renderDestiny() {
+  const lightDots = document.getElementById("destinyLightDots");
+  const darkDots  = document.getElementById("destinyDarkDots");
+  if (!lightDots || !darkDots) return;
+
+  lightDots.innerHTML = "";
+  darkDots.innerHTML  = "";
+
+  for (let i = 0; i < destiny.light; i++) {
+    const dot = document.createElement("span");
+    dot.className = "destiny-dot light";
+    lightDots.appendChild(dot);
+  }
+  for (let i = 0; i < destiny.dark; i++) {
+    const dot = document.createElement("span");
+    dot.className = "destiny-dot dark";
+    darkDots.appendChild(dot);
+  }
+}
+
 /* === SPECIALIZATIONS === */
 function renderSpecializations(c) {
   const container = document.getElementById("specList");
@@ -209,7 +278,6 @@ function renderSpecializations(c) {
       <input type="text" placeholder="Notes" value="${spec.notes || ""}" data-field="notes" data-index="${idx}">
       <button type="button" class="mini-btn danger" data-remove="${idx}">✕</button>
     `;
-    // hook up change handlers
     row.querySelectorAll("input").forEach(input => {
       input.oninput = (e) => {
         const i = parseInt(e.target.dataset.index,10);
@@ -347,6 +415,104 @@ function renderArmor(c) {
   });
 }
 
+/* === SHIP === */
+function renderShipWeapons(c) {
+  const ship = c.ship;
+  const container = document.getElementById("shipWeaponList");
+  container.innerHTML = "";
+  ship.weapons.forEach((w, idx) => {
+    const row = document.createElement("div");
+    row.className = "list-row";
+    row.innerHTML = `
+      <input type="text" placeholder="Weapon name" value="${w.name || ""}" data-field="name" data-index="${idx}">
+      <input type="number" class="tiny" placeholder="Dmg" value="${w.damage || ""}" data-field="damage" data-index="${idx}">
+      <input type="number" class="tiny" placeholder="Crit" value="${w.crit || ""}" data-field="crit" data-index="${idx}">
+      <input type="text" class="short" placeholder="Range" value="${w.range || ""}" data-field="range" data-index="${idx}">
+      <input type="text" class="short" placeholder="Arc" value="${w.arc || ""}" data-field="arc" data-index="${idx}">
+      <input type="text" placeholder="Qualities" value="${w.qualities || ""}" data-field="qualities" data-index="${idx}">
+      <button type="button" class="mini-btn danger" data-remove="${idx}">✕</button>
+    `;
+
+    row.querySelectorAll("input").forEach(input => {
+      input.oninput = (e) => {
+        const i = parseInt(e.target.dataset.index,10);
+        const field = e.target.dataset.field;
+        if (["damage","crit"].includes(field)) {
+          ship.weapons[i][field] = +e.target.value || 0;
+        } else {
+          ship.weapons[i][field] = e.target.value;
+        }
+        saveToStorage();
+      };
+    });
+
+    row.querySelector("button[data-remove]").onclick = () => {
+      ship.weapons.splice(idx,1);
+      saveToStorage();
+      renderShipWeapons(c);
+    };
+
+    container.appendChild(row);
+  });
+}
+
+function renderShip(c) {
+  ensureShipShape(c);
+  const ship = c.ship;
+
+  const map = [
+    ["shipName","name","text"],
+    ["shipModel","model","text"],
+    ["shipSilhouette","silhouette","number"],
+    ["shipSpeed","speed","number"],
+    ["shipHandling","handling","number"],
+    ["shipArmor","armor","number"],
+    ["shipHullThreshold","hullTraumaThreshold","number"],
+    ["shipHullCurrent","hullTraumaCurrent","number"],
+    ["shipStrainThreshold","systemStrainThreshold","number"],
+    ["shipStrainCurrent","systemStrainCurrent","number"],
+    ["shipDefenseFore","defenseFore","number"],
+    ["shipDefenseAft","defenseAft","number"],
+    ["shipDefensePort","defensePort","number"],
+    ["shipDefenseStarboard","defenseStarboard","number"],
+    ["shipNotes","notes","text"]
+  ];
+
+  map.forEach(([id, field, type]) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.value = type === "number" ? (ship[field] ?? 0) : (ship[field] || "");
+    el.oninput = (e) => {
+      if (type === "number") {
+        ship[field] = +e.target.value || 0;
+      } else {
+        ship[field] = e.target.value;
+      }
+      saveToStorage();
+    };
+  });
+
+  renderShipWeapons(c);
+}
+
+/* === WOUND / STRAIN UI HIGHLIGHT === */
+function updateWoundStrainUI() {
+  if (selectedIndex === null) return;
+  const woundInput  = document.getElementById("wounds");
+  const strainInput = document.getElementById("strain");
+  const woundThrEl  = document.getElementById("woundThreshold");
+  const strainThrEl = document.getElementById("strainThreshold");
+  if (!woundInput || !strainInput || !woundThrEl || !strainThrEl) return;
+
+  const w  = +woundInput.value  || 0;
+  const wt = +woundThrEl.value  || 0;
+  const s  = +strainInput.value || 0;
+  const st = +strainThrEl.value || 0;
+
+  woundInput.classList.toggle("danger", wt > 0 && w >= wt);
+  strainInput.classList.toggle("danger", st > 0 && s >= st);
+}
+
 /* ================= CHARACTER EDIT / OPEN ================= */
 function openCharacter(index) {
   selectedIndex = index;
@@ -364,6 +530,8 @@ function openCharacter(index) {
   document.getElementById("soak").value = c.soak || 0;
   document.getElementById("defense").value = c.defense || 0;
   document.getElementById("gear").value = c.gear || "";
+  document.getElementById("woundThreshold").value = c.woundThreshold || 0;
+  document.getElementById("strainThreshold").value = c.strainThreshold || 0;
 
   renderStats(c.stats);
   renderSkills(c.skills);
@@ -372,6 +540,8 @@ function openCharacter(index) {
   renderTalents(c);
   renderWeapons(c);
   renderArmor(c);
+  renderShip(c);
+  updateWoundStrainUI();
   refreshCharList();
 }
 
@@ -388,6 +558,8 @@ document.getElementById("saveBtn").onclick = () => {
   c.soak = +document.getElementById("soak").value || 0;
   c.defense = +document.getElementById("defense").value || 0;
   c.gear = document.getElementById("gear").value;
+  c.woundThreshold = +document.getElementById("woundThreshold").value || 0;
+  c.strainThreshold = +document.getElementById("strainThreshold").value || 0;
 
   // stats
   c.stats = {};
@@ -397,12 +569,44 @@ document.getElementById("saveBtn").onclick = () => {
 
   saveToStorage();
   refreshCharList();
+  updateWoundStrainUI();
 };
 
 /* Bind XP inputs once */
 ["xpStarting","xpEarned","xpSpent"].forEach(id => {
   const el = document.getElementById(id);
   el.oninput = updateAvailableXP;
+});
+
+/* Bind threshold inputs for live saving & highlight */
+["woundThreshold","strainThreshold"].forEach(id => {
+  const el = document.getElementById(id);
+  el.oninput = () => {
+    if (selectedIndex === null) return;
+    const c = characters[selectedIndex];
+    if (id === "woundThreshold") c.woundThreshold = +el.value || 0;
+    if (id === "strainThreshold") c.strainThreshold = +el.value || 0;
+    saveToStorage();
+    updateWoundStrainUI();
+  };
+});
+
+/* Bind tracker +/- buttons */
+document.querySelectorAll(".tracker-btn").forEach(btn => {
+  btn.onclick = () => {
+    if (selectedIndex === null) return;
+    const field = btn.dataset.track;
+    const delta = parseInt(btn.dataset.delta, 10) || 0;
+    const input = document.getElementById(field);
+    let val = +input.value || 0;
+    val += delta;
+    if (val < 0) val = 0;
+    input.value = val;
+    const c = characters[selectedIndex];
+    c[field] = val;
+    saveToStorage();
+    updateWoundStrainUI();
+  };
 });
 
 /* ================= DICE ROLLER ================= */
@@ -585,7 +789,18 @@ document.getElementById("newBtn").onclick = () => {
     specializations: [],
     talents: [],
     weapons: [],
-    armor: []
+    armor: [],
+    woundThreshold:0,
+    strainThreshold:0,
+    ship: {
+      name:"", model:"",
+      silhouette:0, speed:0, handling:0, armor:0,
+      hullTraumaThreshold:0, hullTraumaCurrent:0,
+      systemStrainThreshold:0, systemStrainCurrent:0,
+      defenseFore:0, defenseAft:0, defensePort:0, defenseStarboard:0,
+      notes:"",
+      weapons:[]
+    }
   };
   characters.push(c);
   saveToStorage();
@@ -663,7 +878,29 @@ document.getElementById("seedBtn").onclick = () => {
     ],
     armor: [
       { name:"Armored Jacket", soak:1, defense:1, encumbrance:3, qualities:"Soak +1, Defense +1" }
-    ]
+    ],
+    woundThreshold: 14,
+    strainThreshold: 12,
+    ship: {
+      name:"Millennium Falcon",
+      model:"YT-1300",
+      silhouette:4,
+      speed:5,
+      handling:1,
+      armor:4,
+      hullTraumaThreshold:22,
+      hullTraumaCurrent:0,
+      systemStrainThreshold:18,
+      systemStrainCurrent:0,
+      defenseFore:1,
+      defenseAft:1,
+      defensePort:0,
+      defenseStarboard:0,
+      notes:"Fastest hunk of junk in the galaxy.",
+      weapons:[
+        { name:"Quad Laser Cannon", damage:6, crit:3, range:"Long", arc:"All", qualities:"Linked 1" }
+      ]
+    }
   }];
   saveToStorage();
   refreshCharList();
@@ -721,9 +958,50 @@ document.getElementById("addArmorBtn").onclick = () => {
   renderArmor(c);
 };
 
+document.getElementById("addShipWeaponBtn").onclick = () => {
+  if (selectedIndex === null) return;
+  const c = characters[selectedIndex];
+  ensureCharacterShape(c);
+  c.ship.weapons.push({
+    name:"", damage:0, crit:0, range:"", arc:"", qualities:""
+  });
+  saveToStorage();
+  renderShipWeapons(c);
+};
+
+/* DESTINY BUTTONS */
+document.getElementById("destinyLightPlus").onclick = () => {
+  destiny.light++;
+  saveDestiny();
+  renderDestiny();
+};
+document.getElementById("destinyDarkPlus").onclick = () => {
+  destiny.dark++;
+  saveDestiny();
+  renderDestiny();
+};
+document.getElementById("destinyFlipToDark").onclick = () => {
+  if (destiny.light > 0) {
+    destiny.light--;
+    destiny.dark++;
+    saveDestiny();
+    renderDestiny();
+  }
+};
+document.getElementById("destinyFlipToLight").onclick = () => {
+  if (destiny.dark > 0) {
+    destiny.dark--;
+    destiny.light++;
+    saveDestiny();
+    renderDestiny();
+  }
+};
+
 /* ================= INIT ================= */
 loadFromStorage();
+loadDestiny();
 refreshCharList();
+renderDestiny();
 
 /* ================= STARFIELD ANIMATION ================= */
 (function(){
