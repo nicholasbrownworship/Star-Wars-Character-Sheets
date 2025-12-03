@@ -75,10 +75,28 @@
           </div>
         </div>
 
-        <div>
-          <label>Motivation / Notes</label>
-          <textarea id="notes" rows="3"></textarea>
-        </div>
+        <!-- PORTRAIT + MOTIVATION -->
+        <section class="card-section portrait-card">
+          <div class="portrait-frame">
+            <img id="portraitPreview" alt="Character portrait" />
+            <div id="portraitPlaceholder" class="portrait-placeholder">
+              No portrait yet<br/>
+              <span class="meta" style="text-transform:none;">Upload a face, symbol, or token</span>
+            </div>
+          </div>
+          <div class="portrait-side">
+            <div class="portrait-actions">
+              <button type="button" class="mini-btn" id="portraitUploadBtn">Upload Portrait</button>
+              <button type="button" class="mini-btn danger" id="portraitClearBtn">Clear Portrait</button>
+              <input type="file" id="portraitFile" accept="image/*" style="display:none;">
+              <small>Stored locally in your browser · exported with JSON</small>
+            </div>
+            <div class="portrait-notes">
+              <label>Motivation / Notes</label>
+              <textarea id="notes" rows="3"></textarea>
+            </div>
+          </div>
+        </section>
 
         <!-- CHARACTERISTICS -->
         <div>
