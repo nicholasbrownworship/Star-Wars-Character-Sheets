@@ -1,8 +1,8 @@
 :root {
   --bg-overlay: rgba(0,0,0,0.6);
   --panel: rgba(5,10,20,0.85);
-  --accent: #00ffe6; /* neon blue-green like Star Wars tech */
-  --highlight: #ffcc00; /* yellow accent for selected items */
+  --accent: #00ffe6;
+  --highlight: #ffcc00;
   --muted: #7f8c99;
   --glass: rgba(255,255,255,0.02);
   font-family: 'Orbitron', 'Inter', sans-serif;
@@ -285,7 +285,7 @@ textarea:focus {
   background: rgba(255,80,80,0.15);
 }
 
-/* LIST ROWS FOR SPECS / TALENTS / WEAPONS / ARMOR */
+/* LIST ROWS FOR SPECS / TALENTS / WEAPONS / ARMOR / CRITS / SHIP WEAPONS */
 .list-section {
   display:flex;
   flex-direction:column;
@@ -309,6 +309,12 @@ textarea:focus {
 
 .list-row .tiny {
   max-width:70px;
+}
+
+/* Critical injury style */
+.crit-row.healed {
+  opacity:0.6;
+  text-decoration:line-through;
 }
 
 /* XP AVAILABLE DISPLAY */
