@@ -105,6 +105,7 @@ function ensureCharacterShape(c) {
   if (!Array.isArray(c.talents))         c.talents         = [];
   if (!Array.isArray(c.weapons))         c.weapons         = [];
   if (!Array.isArray(c.armor))           c.armor           = [];
+  if (!Array.isArray(c.criticalInjuries)) c.criticalInjuries = [];
 
   if (typeof c.woundThreshold !== 'number') c.woundThreshold = 0;
   if (typeof c.strainThreshold !== 'number') c.strainThreshold = 0;
@@ -415,6 +416,60 @@ function renderArmor(c) {
   });
 }
 
+/* === CRITICAL INJURIES === */
+function renderCriticalInjuries(c) {
+  const container = document.getElementById("critList");
+  container.innerHTML = "";
+  c.criticalInjuries.forEach((ci, idx) => {
+    const row = document.createElement("div");
+    row.className = "list-row crit-row" + (ci.healed ? " healed" : "");
+    row.innerHTML = `
+      <input type="text" placeholder="Injury name" value="${ci.name || ""}" data-field="name" data-index="${idx}">
+      <input type="number" class="tiny" placeholder="Severity" value="${ci.severity || ""}" data-field="severity" data-index="${idx}">
+      <input type="text" placeholder="Effect" value="${ci.effect || ""}" data-field="effect" data-index="${idx}">
+      <label style="display:flex;align-items:center;gap:4px;font-size:11px;">
+        <input type="checkbox" data-field="healed" data-index="${idx}" ${ci.healed ? "checked" : ""}> Healed
+      </label>
+      <button type="button" class="mini-btn danger" data-remove="${idx}">✕</button>
+    `;
+
+    // Inputs for fields
+    row.querySelectorAll("input[type=text], input[type=number]").forEach(input => {
+      input.oninput = (e) => {
+        const i = parseInt(e.target.dataset.index,10);
+        const field = e.target.dataset.field;
+        if (field === "severity") {
+          c.criticalInjuries[i][field] = +e.target.value || 0;
+        } else {
+          c.criticalInjuries[i][field] = e.target.value;
+        }
+        saveToStorage();
+      };
+    });
+
+    // Checkbox for healed
+    const healedBox = row.querySelector('input[type=checkbox][data-field="healed"]');
+    healedBox.onchange = (e) => {
+      const i = parseInt(e.target.dataset.index,10);
+      c.criticalInjuries[i].healed = !!e.target.checked;
+      if (c.criticalInjuries[i].healed) {
+        row.classList.add("healed");
+      } else {
+        row.classList.remove("healed");
+      }
+      saveToStorage();
+    };
+
+    row.querySelector("button[data-remove]").onclick = () => {
+      c.criticalInjuries.splice(idx,1);
+      saveToStorage();
+      renderCriticalInjuries(c);
+    };
+
+    container.appendChild(row);
+  });
+}
+
 /* === SHIP === */
 function renderShipWeapons(c) {
   const ship = c.ship;
@@ -540,6 +595,7 @@ function openCharacter(index) {
   renderTalents(c);
   renderWeapons(c);
   renderArmor(c);
+  renderCriticalInjuries(c);
   renderShip(c);
   updateWoundStrainUI();
   refreshCharList();
@@ -790,6 +846,7 @@ document.getElementById("newBtn").onclick = () => {
     talents: [],
     weapons: [],
     armor: [],
+    criticalInjuries: [],
     woundThreshold:0,
     strainThreshold:0,
     ship: {
@@ -879,6 +936,9 @@ document.getElementById("seedBtn").onclick = () => {
     armor: [
       { name:"Armored Jacket", soak:1, defense:1, encumbrance:3, qualities:"Soak +1, Defense +1" }
     ],
+    criticalInjuries: [
+      { name:"Fearsome Wound", severity: 72, effect:"Increase difficulty of Presence and Willpower checks by 1.", healed:false }
+    ],
     woundThreshold: 14,
     strainThreshold: 12,
     ship: {
@@ -956,6 +1016,17 @@ document.getElementById("addArmorBtn").onclick = () => {
   });
   saveToStorage();
   renderArmor(c);
+};
+
+document.getElementById("addCritBtn").onclick = () => {
+  if (selectedIndex === null) return;
+  const c = characters[selectedIndex];
+  ensureCharacterShape(c);
+  c.criticalInjuries.push({
+    name:"", severity:0, effect:"", healed:false
+  });
+  saveToStorage();
+  renderCriticalInjuries(c);
 };
 
 document.getElementById("addShipWeaponBtn").onclick = () => {
