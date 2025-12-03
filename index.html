@@ -48,10 +48,10 @@
 
     <!-- MAIN PANEL / EDITOR -->
     <main class="panel datapad">
-      <div style="display:flex;justify-content:space-between;align-items:center">
+      <div class="editor-header">
         <div>
           <div class="meta">Editing</div>
-          <div id="charNameDisplay" style="font-size:20px">— select a character —</div>
+          <div id="charNameDisplay" class="char-title">— select a character —</div>
         </div>
         <div class="actions">
           <button id="saveBtn">Save</button>
@@ -59,16 +59,17 @@
       </div>
 
       <div id="editorForm" style="display:none" class="editor">
+        <!-- BASIC INFO -->
         <div class="row">
           <div class="col">
             <label>Name</label>
             <input id="name" type="text" placeholder="Character name" />
           </div>
-          <div style="width:190px">
+          <div class="col">
             <label>Species</label>
             <input id="species" type="text" placeholder="Human / Twi'lek" />
           </div>
-          <div style="width:220px">
+          <div class="col">
             <label>Career / Role</label>
             <input id="career" type="text" placeholder="Smuggler / Bounty Hunter" />
           </div>
@@ -79,35 +80,101 @@
           <textarea id="notes" rows="3"></textarea>
         </div>
 
+        <!-- CHARACTERISTICS -->
         <div>
           <label>Characteristics</label>
           <div class="stat-grid" id="stats"></div>
         </div>
 
-        <div style="display:flex;gap:12px">
-          <div style="flex:1">
+        <!-- WOUNDS / STRAIN / SOAK / DEFENSE -->
+        <div class="row">
+          <div class="col">
             <label>Wounds</label>
             <input id="wounds" type="number" min="0" />
           </div>
-          <div style="flex:1">
+          <div class="col">
             <label>Strain</label>
             <input id="strain" type="number" min="0" />
           </div>
-          <div style="flex:1">
+          <div class="col">
             <label>Soak</label>
             <input id="soak" type="number" min="0" />
           </div>
-          <div style="flex:1">
+          <div class="col">
             <label>Defense</label>
             <input id="defense" type="number" min="0" />
           </div>
         </div>
 
-        <div>
-          <label>Gear / Equipment</label>
-          <input id="gear" type="text" placeholder="Blaster, Lightsaber, Armor..." />
+        <!-- XP SECTION -->
+        <section class="card-section">
+          <div class="section-header">
+            <label>Experience</label>
+          </div>
+          <div class="row">
+            <div class="col">
+              <span class="meta">Starting XP</span>
+              <input id="xpStarting" type="number" min="0" />
+            </div>
+            <div class="col">
+              <span class="meta">Earned XP</span>
+              <input id="xpEarned" type="number" min="0" />
+            </div>
+            <div class="col">
+              <span class="meta">Spent XP</span>
+              <input id="xpSpent" type="number" min="0" />
+            </div>
+            <div class="col">
+              <span class="meta">Available</span>
+              <div id="xpAvailable" class="xp-available">0</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SPECIALIZATIONS + TALENTS -->
+        <div class="two-column">
+          <section class="card-section">
+            <div class="section-header">
+              <label>Specializations</label>
+              <button type="button" class="mini-btn" id="addSpecBtn">+ Add</button>
+            </div>
+            <div id="specList" class="list-section"></div>
+          </section>
+
+          <section class="card-section">
+            <div class="section-header">
+              <label>Talents</label>
+              <button type="button" class="mini-btn" id="addTalentBtn">+ Add</button>
+            </div>
+            <div id="talentList" class="list-section"></div>
+          </section>
         </div>
 
+        <!-- WEAPONS -->
+        <section class="card-section">
+          <div class="section-header">
+            <label>Weapons</label>
+            <button type="button" class="mini-btn" id="addWeaponBtn">+ Add</button>
+          </div>
+          <div id="weaponList" class="list-section"></div>
+        </section>
+
+        <!-- ARMOR -->
+        <section class="card-section">
+          <div class="section-header">
+            <label>Armor / Defensive Gear</label>
+            <button type="button" class="mini-btn" id="addArmorBtn">+ Add</button>
+          </div>
+          <div id="armorList" class="list-section"></div>
+        </section>
+
+        <!-- OTHER GEAR / NOTES -->
+        <div>
+          <label>Other Gear / Equipment Notes</label>
+          <input id="gear" type="text" placeholder="Credits, misc gear, notes..." />
+        </div>
+
+        <!-- SKILLS -->
         <div>
           <label>Skills</label>
           <div class="skills" id="skillList"></div>
